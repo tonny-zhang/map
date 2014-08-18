@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+<style type="text/css">
+body, html,#allmap {width: 100%;height: 100%;overflow: hidden;margin:0;}
+</style>
+<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=E8MDMS4BVFEMeAxVP3YddQ6X"></script>
+<title>模拟台风运动的轨迹运动</title>
+</head>
+<body>
+<div id="allmap"></div>
+</body>
+</html>
+<script type="text/javascript">
+/*
+baidu地图js在线文档
+http://developer.baidu.com/map/jsguide-3.htm
+*/
+// 百度地图API功能
+var map = new BMap.Map("allmap");
+map.centerAndZoom(new BMap.Point(122.427624, 39.067382), 8);
+map.addControl(new BMap.NavigationControl());  //添加默认缩放平移控件
+map.addEventListener("dragend", dragendOrZoomend);
+map.addEventListener("zoomend", dragendOrZoomend);
+function dragendOrZoomend(){
+    var bs = map.getBounds();   //获取可视区域
+    var bssw = bs.getSouthWest();   //可视区域左下角
+    var bsne = bs.getNorthEast();   //可视区域右上角
+    console.log("当前地图可视范围是：" + bssw.lng + "," + bssw.lat + "到" + bsne.lng + "," + bsne.lat);
+    var cp = map.getCenter();
+    console.log("地图缩放至：" + this.getZoom() + "级 "+cp.lng + "," + cp.lat);
+}
+
+function WeatherOverlay(point,icon,text){
+    this._point = point;
+    this._icon = icon;
+    this._text = text;
+}
+WeatherOverlay.prototype = new BMap.Overlay();
+WeatherOverlay.prototype.initialize = function(_m){
+    this._map = _m;
+
+    var div = document.createElement('div');
+    div.style.position = "absolute";
+    div.style.zIndex = BMap.Overlay.getZIndex(this._point.lat);
+    div.innerHTML = this._text;
+    _m.getPanes().labelPane.appendChild(div);
+    this._div = div;
+
+}
+WeatherOverlay.prototype.draw = function(){
+    var map = this._map;
+    var pixel = map.pointToOverlayPixel(this._point);
+    this._div.style.left = pixel.x + "px";
+    this._div.style.top  = pixel.y + "px";
+}
+
+map.addOverlay(new WeatherOverlay(new BMap.Point(122.427624, 39.067382),'','11℃'));
+
+
+// var polyline = new BMap.Polyline([
+//   new BMap.Point(122.427624, 39.067382),
+//   new BMap.Point(120.427624, 38.067382),
+//   new BMap.Point(121.427624, 36.067382),
+//   new BMap.Point(124.427624, 34.067382)
+// ], {strokeColor:"blue", strokeWeight:1, strokeOpacity:0.5});
+// map.addOverlay(polyline);
+
+// var myIcon = new BMap.Icon("http://api.map.baidu.com/lbsapi/cloud/jsdemo/demo/Mario.png", new BMap.Size(32, 70), {    //小车图片
+//     offset: new BMap.Size(0, -5),    //相当于CSS精灵
+//     imageOffset: new BMap.Size(0, 0)    //图片的偏移量。为了是图片底部中心对准坐标点。
+// });
+
+// setTimeout(function (){
+//     var runDelay = 600;
+//     var pts = polyline.getPath();    //通过驾车实例，获得一系列点的数组
+//     var paths = pts.length;    //获得有几个点
+//     var carMk = new BMap.Marker(pts[0],{icon:myIcon});
+//     var opts = {    
+//         width : 100,     // 信息窗口宽度    
+//         height: 50,     // 信息窗口高度    
+//         title : "Hello"  // 信息窗口标题   
+//     }    
+//     var infoWindow = new BMap.InfoWindow("World", opts);  // 创建信息窗口对象    
+//     map.openInfoWindow(infoWindow, carMk.getPosition());      // 打开信息窗口 
+//     map.addOverlay(carMk);
+//     i=0;
+//     function resetMkPoint(){
+//         carMk.setPosition(pts[i]);
+//         if(i < paths){
+//             i++;
+//         }else{
+//             i = 0;
+//         }
+//         setTimeout(resetMkPoint,runDelay);
+//     }
+//     setTimeout(resetMkPoint,runDelay)
+// },1500);
+
+ 
+   
+
+</script>

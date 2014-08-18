@@ -1,0 +1,123 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+		<meta charset="utf-8"/>
+	<title> GeoMap </title>
+	<meta name="description" content="绘制SVG地图的JavaScript控件"/>
+	<meta name="keywords" content="svg,地图,geojson,javascript"/>
+	<meta name="author" content="Dx. Yang"/>
+	<script type="text/javascript" src="../../itouch/jueceban/js/jquery-1.8.2.js"></script>
+  
+  <script type="text/javascript" src="./esl.js"></script>
+  <script type="text/javascript">
+  require.config({
+      packages: [
+          {
+              name: 'zrender',
+              location: './zrender',
+              main: 'zrender'
+          }
+      ]
+  });
+  
+  </script>
+  <script type="text/javascript" src="http://10.14.85.116/map/GeoMap/src/geomap.convertor.js"></script>
+  <!--<script type="text/javascript" src="http://10.14.85.116/map/GeoMap/src/geomap.svg.js"></script>-->
+  <script type="text/javascript" src="http://10.14.85.116/map/example/myGeomap/geomap.zrender.js"></script>
+  <script type="text/javascript" src="http://10.14.85.116/map/GeoMap/src/geomap.mosaic.js"></script>
+  <style>
+
+  #mapId{
+    width: 500px;
+    height: 300px;
+    background-color: #ccc;
+  }
+  </style>
+</head>
+<body>
+  <div id="mapId"></div>
+  <script>
+    //初始化地图
+    var map = new GeoMap({
+      container: '#mapId'
+      // ,
+      // scale:{
+      //     x: 30, y: 30
+      // }
+    });
+
+    //加载省份和城市坐标
+    var ajax1 = $.ajax({
+      url: '/map/GeoMap/json/china.city.json',
+      dataType: 'json'
+    });
+    
+    //加载中国地图数据
+    var ajax2 = $.ajax({
+      url: '/map/GeoMap/json/china.geo.json',
+      dataType: 'json'
+    });
+
+    //使用when方法使两个ajax请求同步
+    $.when(ajax1, ajax2).done(function(d1, d2){
+      require(['zrender'],function(zrender){
+        //先渲染地图
+        var mapJson = d2[0];
+        map.load(mapJson);
+        map.render(zrender);
+      });
+      
+return;
+      //省份和城市坐标
+      var positionJson = d1[0];
+
+      //以浙江杭州、北京市区、新疆和田为例
+      //将三个城市标注，并连线
+
+      //获取三个城市的坐标值
+      //数据格式{x:number, y:number}
+      var hzPosition = positionJson['浙江']['杭州'];
+      var bjPosition = positionJson['北京']['北京'];
+      var htPosition = positionJson['新疆']['和田'];
+
+      //在地图上画出3个点
+      var hzPoint = map.setPoint(hzPosition);
+      var bjPoint = map.setPoint(bjPosition);
+      var htPoint = map.setPoint(htPosition);
+
+      //通过attr方法调整点的大小和颜色
+      hzPoint.attr({
+        fill: 'blue',
+        r: 5
+      });
+
+      bjPoint.attr({
+        fill: 'red',
+        r: 5
+      });
+
+      htPoint.attr({
+        fill: 'black',
+        r: 5
+      });
+
+      //绘制连接线
+      //drawLineByMapPoints方法接受一个数组参数
+      //该数组的成员是setPoint方法返回的点对象
+      //数组成员可以有N个
+      //drawLineByMapPoints方法会按照数组顺序绘制连接线
+      var line = map.drawLineByMapPoints([hzPoint, bjPoint, htPoint]);
+
+      //通过attr方法调整线的样式
+      line.attr({
+        stroke: 'green'
+      });
+
+
+    });
+  </script>
+</body>
+</html>
+</body>
+</html>

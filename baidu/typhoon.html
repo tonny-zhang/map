@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+<style type="text/css">
+body, html,#allmap {width: 100%;height: 100%;overflow: hidden;margin:0;}
+</style>
+<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=E8MDMS4BVFEMeAxVP3YddQ6X"></script>
+<script type="text/javascript" src="js/util.js"></script>
+<script type="text/javascript" src="http://10.14.85.116/misc/source/j/jquery-1.8.2.js"></script>
+<title>模拟台风运动的轨迹运动</title>
+</head>
+<body>
+<div id="allmap" style="width:400px;height:400px;"></div>
+</body>
+</html>
+<script type="text/javascript">
+/*
+baidu地图js在线文档
+http://developer.baidu.com/map/jsguide-3.htm
+*/
+
+// 百度地图API功能
+var map = new BMap.Map("allmap");
+map.centerAndZoom(new BMap.Point(116.404, 39.915), 5);
+map.addControl(new BMap.NavigationControl());  //添加默认缩放平移控件
+
+
+var myIcon = new BMap.Icon("http://api.map.baidu.com/lbsapi/cloud/jsdemo/demo/Mario.png", new BMap.Size(32, 70), {
+    offset: new BMap.Size(0, -5),    //相当于CSS精灵
+    imageOffset: new BMap.Size(0, 0)    //图片的偏移量。为了是图片底部中心对准坐标点。
+});
+var xmlDoc = window.loadXML('http://flash.weather.com.cn/typhoon/1401.xml');
+var points = $(xmlDoc).children();
+function getBDPoint(index){
+    var point = points.eq(index);
+    return new BMap.Point(point.attr('jd'), point.attr('wd'));
+}
+function reset(){
+    var temp;
+    while(temp = pathOverlay.pop()){
+        map.removeOverlay(temp);
+    }
+    currentIndex = 0;
+    carMk.setPosition(firstPoint);
+    begin();
+}
+function begin(){
+    var runDelay = 600;
+    var numOfPoints = points.length;
+
+    var lineOpt = {strokeColor:"blue", strokeWeight:1, strokeOpacity:0.5};
+    function run(){
+        var one = getBDPoint(currentIndex);
+        var two = getBDPoint(currentIndex+1);console.log(one,two);
+        var polyline = new BMap.Polyline([one,two], lineOpt);
+        pathOverlay.push(polyline);
+        map.addOverlay(polyline);
+        carMk.setPosition(two);
+        if(currentIndex++ < numOfPoints-2){
+            setTimeout(run,runDelay)
+        }
+    }
+    setTimeout(run,runDelay);
+}
+var currentIndex = 0;
+var firstPoint = getBDPoint(currentIndex);
+map.centerAndZoom(firstPoint, 8);
+var pathOverlay = [];
+var carMk = new BMap.Marker(firstPoint,{icon:myIcon});
+carMk.addEventListener("mouseover", function(){console.log('mouseover');});
+carMk.addEventListener("mouseout", function(){console.log('mouseout');});
+map.addOverlay(carMk);
+setTimeout(reset,1500)
+</script>

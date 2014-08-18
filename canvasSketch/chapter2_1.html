@@ -1,0 +1,59 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <script src = "./libs/CanvasSketch.js"></script>
+    <script type = "text/javascript">
+        var timer, zoom;
+        function init() {            
+            var div = document.getElementById("renderer");
+            div.innerHTML = "";
+            if(timer) {clearInterval(timer);};
+            var layer = new Layer(div);
+            var vectors = [];
+            
+            var differ = 1;
+
+            for(var i = 0; i<500; i++) {
+                var point = new Point((Math.random()*400-200), (Math.random()*300-150));
+                
+                vectors.push(new Vector(point));
+            }
+            
+            layer.addVectors(vectors);
+            zoom = layer.zoom;
+            center = layer.center;
+            
+            timer = setInterval(function(){
+                zoom += differ;
+                //缩放。
+                layer.moveTo(zoom);
+                if(zoom > 250) {
+                    clearInterval(timer);
+                    //开始平移
+                    startPan();
+                }
+            },30);
+            
+            //平移。
+            function startPan() {
+                timer =    setInterval(function() {
+                                center.x += differ;
+                                center.y += differ;
+                                if(center.x > layer.maxBounds.right && center.y > layer.maxBounds.top){
+                                    differ *= -1;
+                                }
+                                if(center.x < layer.maxBounds.left && center.y < layer.maxBounds.bottom){
+                                    clearInterval(timer);
+                                }
+                                layer.moveTo(zoom, center);
+                            }                
+                        , 30)
+            }
+        }        
+    </script>
+</head>
+<body>
+    <div style="width:400px; height:300px; border:1px solid black" id="renderer">&nbsp;</div>
+    <button type="button" onclick="init()">运行示例</button>
+</body>
+</html>

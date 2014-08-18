@@ -1,0 +1,373 @@
+
+<!doctype html>
+<html>
+<head>
+    <base href="http://map.mapyeah.com:9080/LeiDaShow/"/>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <link href="css/TrafficControl_min.css" rel="stylesheet" type="text/css"/>
+    <link href="css/cssLegend.css" rel="stylesheet" type="text/css"/>
+    <link href="css/cssPlayer.css" rel="stylesheet" type="text/css"/>
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=1.4"></script>
+    <script type="text/javascript" src="js/jquery-1.10.2.min.js"></script>
+    <script id="weatherjs" type="text/javascript" src="http://map.mapyeah.com:9080/mapdata/rain/weatherconf.js"></script>
+</head>
+<body style="overflow:hidden">
+<div style="width:100%;height:700px;border:1px solid gray;margin:0 auto;z-index:100;" id="container"></div>
+<div class="wx-main-controls" style="display: block; opacity:100;" id="legend">
+    <div class="wx-layer-controls">
+        <img class="wx-imap-legend" src="images/215x41_radar.png">
+    </div>
+</div>
+<div class="wx-animator control" style="display: block;">
+    <h3 class="wx-animator-title">Copyright<span class="wx-sup">©</span>中国气象局 &nbsp;</h3>
+
+    <div id="playMYD" class="wx-past wx-play " data-timestamp="" tracktype=""
+         trackstr="imap-nonlocal-play-past-radar_na_qp" onclick="playMYD();">播放
+    </div>
+    <div id="pauseMYD" class="wx-past wx-pause wx-hide" data-timestamp="" tracktype=""
+         trackstr="imap-nonlocal-pause-past-radar_na_qp" onclick="playMYD();">暂停
+    </div>
+    <div class="wx-playhead-time">
+        <p id="mtime" class="wx-map-timestamp"></p>
+    </div>
+    <div class="wx-speed-control">
+        <p class="wx-slow">慢</p>
+
+        <div id="mspeedslide" class="wx-speed-slider" data-timeout="5000" data-timestamp="" tracktype=""
+             trackstr="imap-nonlocal-speed-radar_na_qp">
+            <div id="mspeed" class="wx-slider wx-touch-handler" style="left: 0px;"></div>
+        </div>
+        <p class="wx-fast">快</p>
+    </div>
+    <div class="wx-animate-control">
+        <div id="mslide" class="wx-past-slider" data-timeout="5000" data-timestamp="" tracktype=""
+             trackstr="imap-nonlocal-scrub-radar_na_qp">
+            <div id="mprogress" class="wx-icon wx-ani wx-slider wx-touch-handler" style="left: 0px;">
+                <i class="wx-scrub-tooltip">
+                        <span class="wx-tip-timestamp">
+                            <span>2:45 pm<br>
+                                <span class="wx-date">Sep 1</span>
+                            </span>
+                        </span>
+                </i>
+            </div>
+        </div>
+    </div>
+    <div class="wx-future-slider wx-hide" data-timeout="5000" data-timestamp="" tracktype=""
+         trackstr="imap-nonlocal-scrub-radar_na_qp">
+        <div class="wx-icon wx-ani wx-slider wx-touch-handler">
+            <i class="wx-scrub-tooltip">
+                    <span class="wx-tip-timestamp">
+                        <span>2:45 pm<br>
+                            <span class="wx-date">Sep 1</span>
+                        </span>
+                    </span>
+            </i>
+        </div>
+    </div>
+    <div class="wx-timeline wx-past">
+        <div id="mfirstframe" class="wx-timeline-left">1</div>
+        <div id="mlastframe" class="wx-timeline-right">0</div>
+        <!--需要真实帧数代替-->
+    </div>
+</div>
+
+<script type="text/javascript">
+//地图填充浏览器高度
+document.getElementById("container").style.height = document.documentElement.clientHeight + "px";
+
+var map = new BMap.Map("container",{minZoom:0,maxZoom:12});
+map.centerAndZoom(new BMap.Point(116.404, 39.915), 5);
+map.addControl(new BMap.NavigationControl());
+map.addControl(new BMap.ScaleControl());
+map.addControl(new BMap.OverviewMapControl());
+map.addControl(new BMap.MapTypeControl());
+map.enableScrollWheelZoom();
+
+map.addEventListener("dragend", function(){
+  var mlng = map.getCenter().lng;
+  var mlat = map.getCenter().lat;
+  if(mlng<-180 || mlng>180 || mlat>80 || mlat<-80){
+	setTimeout(function(){
+	map.panTo(new BMap.Point(116.404, 39.915));
+	},200);
+  }
+
+});
+
+var frameChanged;
+var i = 0;
+var floader_str = "";
+var flag = false;
+var myinterval;
+var speedint = 2200;
+
+var tileLayer1 = new BMap.TileLayer({isTransparentPng:true});
+var tileLayer2 = new BMap.TileLayer({isTransparentPng:true});
+var jsurl = weatherBaseUrl + "weatherconf.js";
+var m_time = document.getElementById("mtime");
+showleida(0);
+frameChanged = m_weather_rain.length;
+//开始播放
+function startbtn() {
+    flag = true;
+    myinterval = setInterval('playleida()', speedint);
+}
+//停止播放
+function stopbtn() {
+    flag = false;
+    clearInterval(myinterval);
+}
+
+//自定义叠加
+function playleida() {
+    if (flag) {
+        remove();
+        var flieName = m_weather_rain[i];
+    tileLayer2.getTilesUrl = tileLayer1.getTilesUrl = function (tileCoord, zoom) {
+        var x = tileCoord.x;
+        var y = tileCoord.y;
+        var strURL = weatherBaseUrl + flieName + '/' + (zoom  ) + '/' + (x) + '/' + (y) + '.png';
+        return strURL;
+    }
+    gangedPro(i);
+    i++;
+    if (i == m_weather_rain.length || m_weather_rain.length==1) {
+        i = 0;
+    }
+    map.addTileLayer(tileLayer1);
+	//setTimeout('remove2()',speedint);
+	remove2();
+	}
+}
+//删除自定义图层
+function remove2() {
+    map.removeTileLayer(tileLayer2);
+}
+function remove() {
+    map.removeTileLayer(tileLayer1);
+}
+var weatherBaseUrl = "/mapdata/rain/";
+var isPlayed = false;
+function playMYD() {
+    //根据播放速度设置的值，播放，并设置图片
+    var playMyd = $('#playMYD');
+    var pauseMyd = $('#pauseMYD');
+    playMyd.removeClass();
+    pauseMyd.removeClass();
+    if (isPlayed) {
+        playMyd.attr("class", "wx-past wx-play");
+        pauseMyd.attr("class", "wx-past wx-pause wx-hide");
+        stopbtn();//停止播放
+        isPlayed = false;
+    }
+    else {
+        playMyd.attr("class", "wx-past wx-play wx-hide");
+        pauseMyd.attr("class", "wx-past wx-pause");
+        startbtn();//开始播放
+        isPlayed = true;
+    }
+}
+//字符串转日期格式
+//文件格式：20120607131000，按照2012年6月7日13时10分显示
+function getDate(strDate) {
+    var mTime;
+    var arr = new Array()
+	mTime = stringToTime(strDate.replace("_", "").replace(" ", "").replace("-", ""));
+    //arr = strDate.replace("_", "").replace(" ", "").replace("-", "").split("");
+   // mTime = arr[0] + arr[1] + arr[2] + arr[3] + "年 " + arr[4] + arr[5] + "月 " + arr[6] + arr[7] + "日 " + arr[8] + arr[9] + "时 " + arr[10] + arr[11] + "分";
+    return mTime;
+}
+ function stringToTime(strDate) {      
+    var y = strDate.substring(0,4);      
+    var m = strDate.substring(4,6)-1;      
+    var d = strDate.substring(6,8);      
+    var h = strDate.substring(8,10);      
+    var mm = strDate.substring(10,12);      
+    var ss = strDate.substring(12,14);      
+    var date = new Date(y,m,d,h,mm,ss,0);      
+	return timeAdd(date);
+}
+function timeAdd(date){   
+		//8小时的毫秒数,加8小时 
+		var interval = 8*60*60*1000;      
+		date.setTime(date.getTime()+interval);
+		var strBJDate = date.getFullYear()+"年"+(date.getMonth()+1)+"月"+date.getDate()+"日"+date.getHours()+"时"+date.getMinutes()+"分";
+		return strBJDate;
+	}
+
+//进度条播放联动
+var m_progress = document.getElementById("mprogress");
+var m_lastframe = document.getElementById("mlastframe");
+m_lastframe.innerHTML = m_weather_rain.length + "";
+function gangedPro(num) {
+	if(m_weather_rain.length !=1){
+		m_progress.style.left = num / (m_weather_rain.length - 1) * 469 + "px";
+		m_time.innerHTML = getDate(m_weather_rain[num]);
+	}
+}
+
+//显示指定的一帧数据
+function showleida(flienum) {
+    remove();
+    i = flienum;
+    tileLayer2.getTilesUrl = tileLayer1.getTilesUrl = function (tileCoord, zoom) {
+        var x = tileCoord.x;
+        var y = tileCoord.y;
+        var strURL = weatherBaseUrl + m_weather_rain[flienum] + '/' + (zoom  ) + '/' + (x) + '/' + (y) + '.png';
+        return strURL;
+    }
+    map.addTileLayer(tileLayer1);
+	map.addTileLayer(tileLayer2);
+	remove2();
+    m_time.innerHTML = getDate(m_weather_rain[flienum]);
+}
+
+//帧数据播放进度拖拽
+progress = function (btn, bar) {
+    this.btn = document.getElementById(btn);
+    this.bar = document.getElementById(bar);
+    this.step = this.bar.getElementsByTagName("DIV")[0];
+    this.init();
+};
+var prodragging;
+var movieing;
+var prox;
+var proto;
+progress.prototype = {
+    init:function () {
+        prodragging = false;
+		movieing = false;
+        var f = this, g = document, b = window, m = Math;
+        var num = 469 / (m_weather_rain.length - 1);
+        f.btn.onmousedown = function (e) {
+            prodragging = true;
+			movieing = false;
+            prox = (e || b.event).clientX;
+            var l = this.offsetLeft;
+            var max = f.bar.offsetWidth - this.offsetWidth;
+            
+            g.onmousemove = function (e) {
+            	movieing = true;
+                var thisX = (e || b.event).clientX;
+                proto = m.min(max, m.max(-2, l + (thisX - prox)));
+                if (prodragging) {
+                    f.btn.style.left = proto + 'px';
+                }
+               b.getSelection ? b.getSelection().removeAllRanges() : g.selection.empty();
+            };
+			
+            g.onmouseup = function () {
+                if(prodragging && movieing){
+	                //拖拽的位置距离哪一帧的进度最近，自动跳到那一帧的位置
+					if(m_weather_rain.length == 1){
+						f.btn.style.left = "0px";
+						prodragging = false;
+						movieing = false;
+						return;
+					}
+	                for (var n = 1; n <= m_weather_rain.length; n++) {
+	                    if ((n - 1) * num <= proto && proto <= n * num) {
+	                        if ((n * num - proto) > num / 2 || (n * num - proto) == num / 2) {
+	                            prox = num * (n - 1);
+	                            f.btn.style.left = prox + "px";
+	                            showleida(n - 1);
+	                            break;
+	                        } else if ((n * num - proto) < num / 2) {
+	                            prox = n * num;
+	                            f.btn.style.left = prox + "px";
+	                            showleida(n);
+	                            break;
+	                        }
+	                    }
+	                }
+	               }
+	               prodragging = false;
+				   movieing = false;
+            };
+			
+        };
+		
+    }
+}
+new progress('mprogress', 'mslide');
+
+//帧数据播放速度控制拖拽
+speed = function (btn, bar) {
+    this.btn = document.getElementById(btn);
+    this.bar = document.getElementById(bar);
+    this.step = this.bar.getElementsByTagName("DIV")[0];
+    this.init();
+};
+speed.prototype = {
+    init:function () {
+        var dragging = false;
+        var f = this, g = document, b = window, m = Math;
+        f.btn.onmousedown = function (e) {
+            dragging = true;
+            var x = (e || b.event).clientX;
+            var l = this.offsetLeft;
+            var max = f.bar.offsetWidth - this.offsetWidth;
+            var to;
+            g.onmousemove = function (e) {
+                var thisX = (e || b.event).clientX;
+                to = m.min(max, m.max(-2, l + (thisX - x)));
+                if (dragging) {
+                    f.btn.style.left = to + 'px';
+                    speedint = (1 - to / 47) * 2200 + 200;
+                }
+				b.getSelection ? b.getSelection().removeAllRanges() : g.selection.empty();
+            };
+            g.onmouseup = function () {
+                dragging = false;
+                if (isPlayed) {
+                    stopbtn();
+                    startbtn();
+                }
+                /*
+                if (dragging) {
+                    f.btn.style.left = to + 'px';
+                }
+                */
+            };
+        };
+    }
+}
+new speed('mspeed', 'mspeedslide');
+
+//重新加载脚本
+function loadjs(id, url, callback) {
+    oScript = document.getElementById(id);
+    var head = document.getElementsByTagName("head").item(0);
+    if (oScript) {
+        head.removeChild(oScript);
+    }
+    oScript = document.createElement("script");
+    var d = new Date();
+    var tmpUrl = url + "?time=" + d.getTime();
+    oScript.setAttribute("src", tmpUrl);
+    // Set the id attribute of the script tag
+    oScript.setAttribute("id", id);
+    // Create the new script tag which causes the proxy to be called
+    head.appendChild(oScript);
+    oScript.onreadystatechange = function () {
+        if (this.readyState == "loaded") {
+            if (callback)callback();
+            this.onreadystatechange = null;
+        }
+    };
+    m_lastframe.innerHTML = m_weather_rain.length + "";
+	if(frameChanged != m_weather_rain.length){
+		alertUpdata("有新的雷达数据\n请刷新");
+	}
+	//alert(m_weather_rain.length);
+}
+function alertUpdata(str){
+	alert(str);
+	location.reload	();
+}
+setInterval('loadjs("weatherjs",jsurl)', 1000 * 300);//每五分钟刷新获取雷达图
+</script>
+</body>
+</html>

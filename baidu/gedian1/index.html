@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+<link rel="stylesheet" type="text/css" href="index.css">
+<title>隔点数据展示</title>
+    <script type="text/javascript" src="http://i.tq121.com.cn/j/jquery-1.8.2.js"></script>
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=E8MDMS4BVFEMeAxVP3YddQ6X"></script>
+</head>
+<body>
+    <div class="top"></div>
+    <div class="bottom">
+        <div class="bottom_left fl"></div>
+        <div class="bottom_right fr"></div>
+        <div class="bottom_middle">
+            <div id="allmap"></div>
+        </div>
+    </div>
+    <script type="text/javascript">
+    var map = new BMap.Map("allmap");
+    var currentZoom = 6;
+    map.setMinZoom(6);
+    map.setMaxZoom(14);
+    map.enableScrollWheelZoom();    //启用滚轮放大缩小，默认禁用
+    map.enableContinuousZoom();    //启用地图惯性拖拽，默认禁用
+    map.centerAndZoom(new BMap.Point(104.408836,34.899005), currentZoom);
+    map.addControl(new BMap.NavigationControl());  //添加默认缩放平移控件
+    map.addControl(new BMap.ScaleControl());                    // 添加默认比例尺控件
+    // map.addControl(new BMap.MapTypeControl({mapTypes: [BMAP_NORMAL_MAP,BMAP_HYBRID_MAP]}));     //2D图，卫星图
+    map.addControl(new BMap.MapTypeControl({type:BMAP_MAPTYPE_CONTROL_DROPDOWN,anchor: BMAP_ANCHOR_TOP_RIGHT}));    //左上角，默认地图控件
+    </script>
+</body>
+</html>

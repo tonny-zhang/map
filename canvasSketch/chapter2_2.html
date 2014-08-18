@@ -1,0 +1,61 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <script src = "./libs/CanvasSketch.js"></script>
+<script type = "text/javascript">
+	var layer;
+	var circleStyle = {fillColor:"blue", fill:true, stroke:true, fillOpacity:1, strokeOpacity:1};
+	window.addEventListener("load", init2, true);
+	function init2() {            
+		var div = document.getElementById("renderer2");
+		div.innerHTML = "";
+		layer = new Layer(div);  
+	}
+	
+	function addPoint() {
+		var vectors = [];
+		var point = new Point((Math.random()*400-200), (Math.random()*300-150));
+		vectors.push(new Vector(point));
+		layer.addVectors(vectors);
+	}
+	
+	function addCircle() {
+		var vectors = [];
+		var circle = new Circle((Math.random()*400-200), (Math.random()*300-150), Math.random()*10 + 5);
+		var vector = new Vector(circle);
+		vector.style = circleStyle;
+		vectors.push(vector);
+		layer.addVectors(vectors);
+	}
+	
+	function zoomin() {
+		var zoom = layer.zoom + 20;
+		layer.moveTo(zoom)
+	}
+	
+	function zoomout() {
+		var zoom = layer.zoom - 20;
+		layer.moveTo(zoom);
+	}
+	
+	function moveleft() {
+		layer.center.x-=10;
+		layer.moveTo(layer.zoom);
+	}
+	
+	function moveright() {
+		layer.center.x+=10;
+		layer.moveTo(layer.zoom);
+	}
+</script>
+</head>
+<body>
+<div  style="width:400px; height:300px; border:1px solid black" id="renderer2">&nbsp;</div>
+<button type="button" onclick="addPoint()">添加点</button>
+<button type="button" onclick="addCircle()">添加圆</button>
+<button type="button" onclick="zoomin()">放大</button>
+<button type="button" onclick="zoomout()">缩小</button>
+<button type="button" onclick="moveleft()">左</button>
+<button type="button" onclick="moveright()">右</button>
+</body>
+</html>

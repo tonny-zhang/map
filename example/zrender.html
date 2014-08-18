@@ -1,0 +1,267 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <base href="http://ecomfe.github.io/zrender/doc/example/demo.html"/>
+    <meta charset="utf-8">
+    <title>ZRender</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ZRender">
+    <meta name="author" content="linzhifeng@baidu.com">
+
+    <script src="../asset/js/esl/esl.js"></script>
+    <script src="../asset/js/codemirror.js"></script>
+    <script src="../asset/js/javascript.js"></script>
+
+    <!-- <link href="../asset/css/bootstrap.css" rel="stylesheet">
+    <link href="../asset/css/bootstrap-responsive.css" rel="stylesheet"> -->
+    <link href="../asset/css/codemirror.css" rel="stylesheet">
+    <link href="../asset/css/monokai.css" rel="stylesheet">
+    <link href="../asset/css/zrenderHome.css" rel="stylesheet">
+    <link rel="shortcut icon" href="../asset/ico/favicon.png">
+</head>
+
+<body style="width:1000px;">
+    <!-- NAVBAR
+    ================================================== -->
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="brand" href="../../index.html">ZRender</a>
+          <div class="nav-collapse collapse">
+              <a id="forkme_banner" href="https://github.com/ecomfe/zrender">View on GitHub</a>
+              <ul class="nav">
+                <li><a href="../../index.html"><i class="icon-home icon-white"></i> Home</a></li>
+                <li class="active dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Example <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    <li class="active"><a href="demo.html">Demo</a></li>
+                    <li><a href="animation.html">Animation</a></li>
+                    <li><a href="chart.html">Chart</a></li>
+                    <li><a href="colorSeries.html">Color Series</a></li>
+                    <li class="divider"></li>
+                    <!--li class="nav-header">Library</li-->
+                    <li><a href="artist.html">Artist</a></li>
+                    <li><a href="slice.html">slice</a></li>
+                  </ul>
+                </li>
+                <li><a href="../doc.html">API &amp; Doc</a></li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-download-alt icon-white"></i>Download <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    <li><a href="https://github.com/ecomfe/zrender/archive/1.0.9.zip">ZIP (1.0.9)</a></li>
+                    <li><a href="https://github.com/ecomfe/zrender/archive/master.zip">ZIP (Latest)</a></li>
+                  </ul>
+                </li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Link <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    <li><a href="https://github.com/ecomfe" target="_blank">Ecom-FE</a></li>
+                    <li><a href="http://fe.baidu.com/doc/ecom/tech/topic/dv/index.html" target="_blank">Data Visualization</a></li>
+                    <li class="divider"></li>
+                    <!--li class="nav-header">Library</li-->
+                    <li><a href="http://tangram.baidu.com/" target="_blank">Tangram</a></li>
+                  </ul>
+                </li>
+              </ul>
+           </div><!--/.nav-collapse -->
+        </div><!-- /.container -->
+      </div><!-- /.navbar-inner -->
+    </div><!-- /.navbar-wrapper -->
+
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <div id="sidebar-code" class="span4">
+                <div class="well sidebar-nav">
+                    <div class="nav-header">code
+                    <a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>
+                    </div>
+                    <textarea id="code" name="code">
+/*
+ *  zr has been init like this, just use it!
+ *
+ *  var zrender = require('zrender');
+ *  var zr = zrender.init(document.getElementById('main'));
+ */
+zr.clear();
+var color = require('zrender/tool/color');
+var colorIdx = 0;
+var width = Math.ceil(zr.getWidth());
+var height = Math.ceil(zr.getHeight());
+zr.addShape({
+    "shape":"circle",
+    "id":"AZ9771",
+    "style":{
+        "x":220,
+        "y":300,
+        "color":"rgba(220, 20, 60, 0.8)",
+        "strokeColor":"rgba(25, 206, 250, 0.8)",
+        "r":10
+    },
+    "hoverable":true,
+    "clickable":true,
+    onclick: function(){
+        alert('test');
+    }
+} );
+// 圆形
+zr.addShape({
+    shape : 'circle',
+    id : zr.newShapeId('circle'),
+    style : {
+        x : 400,
+        y : 200,
+        r : 10,
+        brushType : 'fill',
+        color : 'rgba(220, 20, 60, 0.8)'
+    },
+    hoverable : true,   // default true
+    draggable : true,   // default false
+    clickable : true,   // default false
+
+    // 可自带任何有效自定义属性
+    _name : 'Hello~',
+    onclick: function(params){
+        alert(params.target._name);
+    },
+
+    // 响应事件并动态修改图形元素
+    onmousewheel: function(params){
+        var eventTool = require('zrender/tool/event');
+        var delta = eventTool.getDelta(params.event);
+        var r = params.target.style.r;
+        r += (delta > 0 ? 1 : -1) * 10;
+        if (r < 10) {
+            r = 10;
+        };
+        zr.modShape(params.target.id, {style: {r: r}})
+        zr.refresh();
+        eventTool.stop(params.event);
+    }
+    /* 封装支持事件，见shape/base, config.EVENT
+    onmousemove : function(e){console.log('onmousemove',e)},
+    onmouseover : function(e){console.log('onmouseover',e)},
+    onmouseout  : function(e){console.log('onmouseout',e)},
+    onmousedown : function(e){console.log('onmousedown',e)},
+    onmouseup   : function(e){console.log('onmouseup',e)},
+    ondragstart : function(e){console.log('ondragstart',e)},
+    ondragend   : function(e){console.log('ondragend',e)},
+    ondragenter : function(e){console.log('ondragenter',e)},
+    ondragover  : function(e){console.log('ondragover',e)},
+    ondragleave : function(e){console.log('ondragleave',e)},
+    ondrop      : function(e){console.log('ondrop',e)}
+    */
+});
+zr.render();
+// 圆形
+zr.addShape({
+    shape : 'circle',
+    id : zr.newShapeId('circle'),
+    style : {
+        x : 200,
+        y : 150,
+        r : 10,
+        brushType : 'both',
+        color : 'rgba(220, 20, 60, 0.8)',          // rgba supported
+        strokeColor : color.getColor(colorIdx++),  // getColor from default palette
+        lineWidth : 5,
+        text :'circle',
+        textPosition :'inside'
+    },
+  
+    clickable : true,   // default false
+
+    // 可自带任何有效自定义属性
+    _name : 'world~',
+    onclick: function(params){
+        alert(params.target._name);
+    },
+
+    // 响应事件并动态修改图形元素
+    onmousewheel: function(params){
+        var eventTool = require('zrender/tool/event');
+        var delta = eventTool.getDelta(params.event);
+        var r = params.target.style.r;
+        r += (delta > 0 ? 1 : -1) * 10;
+        if (r < 10) {
+            r = 10;
+        };
+        zr.modShape(params.target.id, {style: {r: r}})
+        zr.refresh();
+        eventTool.stop(params.event);
+    }
+    /* 封装支持事件，见shape/base, config.EVENT
+    onmousemove : function(e){console.log('onmousemove',e)},
+    onmouseover : function(e){console.log('onmouseover',e)},
+    onmouseout  : function(e){console.log('onmouseout',e)},
+    onmousedown : function(e){console.log('onmousedown',e)},
+    onmouseup   : function(e){console.log('onmouseup',e)},
+    ondragstart : function(e){console.log('ondragstart',e)},
+    ondragend   : function(e){console.log('ondragend',e)},
+    ondragenter : function(e){console.log('ondragenter',e)},
+    ondragover  : function(e){console.log('ondragover',e)},
+    ondragleave : function(e){console.log('ondragleave',e)},
+    ondrop      : function(e){console.log('ondrop',e)}
+    */
+});
+// 扇形
+zr.refresh();
+
+// 绘画
+
+
+/* 除了在shape上绑定事件，可以挂接全局事件
+zr.on('click',      function(e){console.log('onclick',e,'global')});
+zr.on('mousewheel', function(e){console.log('onmousewheel',e,'global')});
+zr.on('mousemove',  function(e){console.log('onmousemove',e,'global')});
+zr.on('mouseover',  function(e){console.log('onmouseover',e,'global')});
+zr.on('mouseout',   function(e){console.log('onmouseout',e,'global')});
+zr.on('mousedown',  function(e){console.log('onmousedown',e,'global')});
+zr.on('mouseup',    function(e){console.log('onmouseup',e,'global')});
+zr.on('dragstart',  function(e){console.log('ondragstart',e,'global')});
+zr.on('dragend',    function(e){console.log('ondragend',e,'global')});
+zr.on('dragenter',  function(e){console.log('ondragenter',e,'global')});
+zr.on('dragover',   function(e){console.log('ondragover',e,'global')});
+zr.on('dragleave',  function(e){console.log('ondragleave',e,'global')});
+zr.on('drop',       function(e){console.log('ondrop',e,'global')});
+*/
+                    </textarea>
+              </div><!--/.well -->
+            </div><!--/span-->
+            <div id="graphic" class="span8" style="width:1000px">
+                <div id="main" class="main"></div>
+                <div>
+                    <button onclick="refresh(true)" tabindex="11110">Refresh ~</button>
+                    <span id='wrong-message' style="color:red"></span>
+                </div>
+            </div><!--/span-->
+        </div><!--/row-->
+        <hr>
+        <!-- FOOTER -->
+        <footer>
+          <p class="pull-right"><a href="#">Back to top</a></p>
+          <p>&copy; 2013 ECOM-FE &middot; <a href="https://github.com/ecomfe/zrender/blob/master/LICENSE.txt" target="_blank">Terms</a> &middot; <a href="../changelog.html" target="_blank">Changelog</a></p>
+        </footer>
+    </div><!--/.fluid-container-->
+
+    <script src="../asset/js/jquery.js"></script>
+    <script src="../asset/js/bootstrap-transition.js"></script>
+    <script src="../asset/js/bootstrap-alert.js"></script>
+    <script src="../asset/js/bootstrap-modal.js"></script>
+    <script src="../asset/js/bootstrap-dropdown.js"></script>
+    <script src="../asset/js/bootstrap-scrollspy.js"></script>
+    <script src="../asset/js/bootstrap-tab.js"></script>
+    <script src="../asset/js/bootstrap-tooltip.js"></script>
+    <script src="../asset/js/bootstrap-popover.js"></script>
+    <script src="../asset/js/bootstrap-button.js"></script>
+    <script src="../asset/js/bootstrap-collapse.js"></script>
+    <script src="../asset/js/bootstrap-carousel.js"></script>
+    <script src="../asset/js/bootstrap-typeahead.js"></script>
+    <script src="../asset/js/zrenderDemo.js"></script>
+</body>
+</html>

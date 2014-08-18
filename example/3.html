@@ -1,0 +1,89 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>iOS gesture test</title>
+    <style type="text/css">
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #canvas {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .spirit {
+            position: absolute;
+            background-color: red;
+            display: block;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="canvas">
+    </div>
+</body>
+<script type="text/javascript">
+    var canvas = document.getElementById("canvas"),
+        spirit, startScale, startRotation;
+
+    function touchStart(e) {
+        e.preventDefault();
+        if (spirit || e.touches.length != 2) return;
+        var touch1 = e.touches[0],
+            pagex1 = touch1.pageX,
+            pagey1 = touch1.pageY,
+            touch2 = e.touches[1],
+            pagex2 = touch2.pageX,
+            pagey2 = touch2.pageY,
+            left = Math.min(pagex1, pagex2),
+            top = Math.min(pagey1, pagey2),
+            width = Math.abs(pagex1 - pagex2),
+            height = Math.abs(pagey1 - pagey2);
+        spirit = document.createElement("div");
+        spirit.className = "spirit";
+        spirit.innerHTML = "fadfdsafsdafsadfsdafsadfsdafsafsda";
+        spirit.style.height = height + "px";
+        spirit.style.width = width + "px";
+        spirit.style.left = left + "px";
+        spirit.style.top = top + "px";
+        canvas.appendChild(spirit);
+    }
+
+    function gestureStart(e) {
+        e.preventDefault();
+    }
+
+    function gestureChange(e) {
+        e.preventDefault();
+        if (!spirit) return;
+        if (startScale == null || startRotation == null) {
+            startScale = e.scale;
+            startRotation = e.rotation;
+        } else {
+            spirit.style.webkitTransform = 'scale(' + e.scale + startScale + ') rotate(' + e.rotation + startRotation + 'deg)';
+        }
+    }
+
+    function gestureEnd(e) {
+        e.preventDefault();
+        if (!spirit) return;
+        canvas.removeChild(spirit);
+        spirit = null;
+        startScale = null;
+        startRotation = null;
+    }
+
+    canvas.addEventListener("touchstart", touchStart, false);
+    canvas.addEventListener("gesturestart", gestureStart, false);
+    canvas.addEventListener("gesturechange", gestureChange, false);
+    canvas.addEventListener("gestureend", gestureEnd, false);
+</script>
+</html>

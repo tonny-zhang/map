@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+<style type="text/css">
+body, html,#allmap {width: 100%;height: 100%;overflow: hidden;margin:0;}
+</style>
+<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=E8MDMS4BVFEMeAxVP3YddQ6X"></script>
+<title>模拟台风运动的轨迹运动</title>
+</head>
+<body>
+<div id="allmap"></div>
+</body>
+</html>
+<script type="text/javascript">
+// 百度地图API功能
+var map = new BMap.Map("allmap");
+map.centerAndZoom(new BMap.Point(116.404, 39.915), 12);
+
+var start = "魏公村";
+var end = "百度大厦";
+//三种驾车策略：最少时间，最短距离，避开高速
+var routePolicy = [BMAP_DRIVING_POLICY_LEAST_TIME,BMAP_DRIVING_POLICY_LEAST_DISTANCE,BMAP_DRIVING_POLICY_AVOID_HIGHWAYS];
+search(start,end,routePolicy[0]); //最少时间
+function search(start,end,route){ 
+    var transit = new BMap.DrivingRoute(map, {
+        renderOptions: {map: map,panel:"r-result"}, 
+        policy: route,
+        onPolylinesSet: function(a){
+            setTimeout(function(){
+                function getBDPoint(i){
+                    var v = data[i];
+                    var bdPoint = new BMap.Point(v.lng,v.lat);
+                    return bdPoint
+                }
+                var data = a[0].jm;
+                var len = data.length;
+                data.forEach(function(v,i){
+                    if(i > len -2){
+                        return;
+                    }
+                    var a = getBDPoint(i);
+                    var b = getBDPoint(i+1);
+                    var polyline = new BMap.Polyline([a,b], {strokeColor:'#940EE9',strokeWeight:30, strokeOpacity:0.05});
+                    
+                    map.addOverlay(polyline);
+                });
+            },1000);
+        }
+    });
+    transit.search(start,end);
+}
+   
+
+</script>
