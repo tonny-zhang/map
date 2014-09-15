@@ -1,0 +1,85 @@
+<!-- <!DOCTYPE html> -->
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    	<meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0,user-scalable=no" />
+    	<meta name="format-detection" content="telephone=no" />
+    	<title>各天气图层展示</title>
+    	<link rel="stylesheet" type="text/css" href="./css/p_index.css">
+	</head>
+	<body>
+		<div class="bg"></div>
+		<!-- <div class="radar">
+			<div class="move"></div>
+		</div> --><div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a></div>
+		<div id="main">
+			<div class="nav_top clear">
+				<div class="fl bg_white" id="btn_back"></div>
+				<div class="fr bg_white nav_search">
+					<form id="form_search">
+						<input type="submit" class="fl" id="btn_search" value=""/>
+						<input type="text" class="fl" id="search_input" placeholder="Search"/>
+						<div class="fr" id="btn_locate"></div>
+					</form>
+				</div>
+			</div>
+			<div class="locate">正在定位中。。。</div>
+			<div class="info container_b">
+				<a id="btn_share"><img src="./img/btn_share.png"/></a>
+				<div class="title">未来60分钟降雨预测</div>
+				<div class="desc">&nbsp;</div>
+				<div id="hour_rain">
+					<!-- <canvas id="circle_rain" width=186 height=186></canvas> -->
+					<!-- <div id="rain_line"></div> -->
+					<div class="times">
+						<span class="time">
+							<span class="text">10分钟</span>
+						</span>
+						<span class="time"></span>
+						<span class="time">
+							<span class="text">30分钟</span>
+						</span>
+						<span class="time"></span>
+						<span class="time">
+							<span class="text">50分钟</span>
+						</span>
+						<span class="time last"></span>
+					</div>
+					<canvas id="rain_line" width="400" height="100" style="width: 400px; height: 100px;"></canvas>
+					<div class="level_c">
+						<div class="leve_1">
+							<span>大雨</span>
+						</div>
+						<div class="leve_1">
+							<span>中雨</span>
+						</div>
+						<div class="leve_1">
+							<span>小雨</span>
+						</div>
+					</div>
+					<ul class="tuli">
+						<li><span class="rain_no"></span>无雨</li>
+						<li><span class="rain_small"></span>小雨</li>
+						<li><span class="rain_middle"></span>中雨</li>
+						<li><span class="rain_big"></span>大雨</li>
+					</ul>
+				</div>
+			</div>
+			<div class="map_c">
+				<div class="container_b map_container">
+					<div id="map">正在加载...</div>
+					<div id="btn_play" >
+						<div class="bg"></div>
+						<div class="btn"></div>
+						<div id="play_time"></div>
+					</div>
+				</div>
+				<div class="tool_bar">
+				</div>
+			</div>
+		</div>
+		<script type="text/javascript" src="./js/jquery-1.8.2.js"></script>
+		<script type="text/javascript" src="./js/highcharts.js"></script>
+		<script type="text/javascript" src="./js/p_index.js"></script>
+	</body>
+</html>
