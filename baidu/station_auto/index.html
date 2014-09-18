@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf8" />
+	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+	<title>批量地址</title>
+	<style type="text/css">
+		body, html{width: 100%;height: 100%;margin:0;font-family:"微软雅黑";}
+		#l-map{height:300px;width:100%;}
+		#r-result{width:100%; font-size:14px;line-height:20px;}
+		#result{
+			height: 400px;
+			overflow: auto;
+		}
+	</style>
+	<script type="text/javascript" src="http://i.tq121.com.cn/j/jquery-1.8.2.js"></script>
+	<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=E8MDMS4BVFEMeAxVP3YddQ6X"></script>
+</head>
+<body>
+	<div id="l-map"></div>
+	<div id="r-result">
+		<input type="button" value="批量地址解析" onclick="bdGEO()" />
+		<div id="result"></div>
+	</div>
+</body>
+</html>
+<script type="text/javascript">
+	// 百度地图API功能
+	var map = new BMap.Map("l-map");
+	map.centerAndZoom(new BMap.Point(117.269945,31.86713), 6);
+	map.enableScrollWheelZoom(true);
+	var index = 0;
+	var myGeo = new BMap.Geocoder();
+
+	var station_auto;
+	var result = [];
+	var result_error = [];
+	var index = 0;
+	var time_start = new Date().getTime();
+	$.getJSON('./station_auto.json',function(data){
+		station_auto = data;
+		// for(var i = 0;i<100;i++){
+		// 	geocodeSearch();
+		// }
+		// parseError();
+		// parseError2();
+		// parseError3();
+		parseError4();
+	});
+	var error_data = [["895718"],["895562"],["895559"],["895556"],["895550"],["895531"],["895503"],["895501"],["895219"],["895204"],["892516"],["892515"],["892514"],["892513"],["892508"],["892505"],["892509"],["892504"],["781307"],["781287"],["781227"],["781207"],["781167"],["781157"],["781147"],["781117"],["781107"],["781097"],["781067"],["781057"],["781037"],["781027"],["781017"],["736003"],["736054"],["736053"],["736052"],["736051"],["736002"],["736001"],["698323"],["698310"],["686081"],["658331"]];
+	function parseError(){
+		var d = {};
+		$.each(station_auto,function(i,v){
+			d[v[0]] = v;
+		});
+		var err_data_result = [];
+		$.each(error_data,function(i,v){
+			err_data_result.push(d[v[0]]);
+		});
+		console.log(err_data_result);
+		station_auto = err_data_result;
+		geocodeSearch();
+	}
+	var error_data_2 = [["895718","新疆","石河子","玛纳斯县","石河子玛纳斯县清水河乡芦草沟村","清水河乡芦草沟村"],["895562","新疆","昌吉州","玛纳斯","南泥沟","南泥沟"],["895559","新疆","昌吉州","玛纳斯","北五岔","北五岔"],["895556","新疆","昌吉州","阜康","西沟河","西沟河"],["895550","新疆","昌吉州","木垒","大东山","大东山"],["895531","新疆","昌吉州","木垒","木垒英格堡","英格堡"],["895219","新疆","伊犁州","察布查尔","坎乡中学","坎乡"],["895204","新疆","伊犁州","霍城","大西沟村村委会","大西沟"],["892516","宁夏","吴忠","盐池","惠安堡镇萌城办事处院内","萌城"],["892515","宁夏","吴忠","盐池","大水坑镇草原站院内","摆宴井"],["892513","宁夏","吴忠","盐池","大水坑镇二道沟石油站","红井子"],["892508","宁夏","吴忠","盐池","王乐井乡鸦儿沟办事处","鸦儿沟"],["892505","宁夏","吴忠","盐池","花马池镇苏步井办事处","苏步井"],["892509","宁夏","吴忠","盐池","王乐井乡政府院内","王乐井"],["781307","广西","南宁","横县","那阳茶场","那阳镇"],["781287","广西","南宁","横县","良圻糖厂","良圻镇"],["781227","广西","南宁","横县","陶圩镇青年水库","陶圩镇青年水库"],["781207","广西","南宁","横县","新福镇政府","新福镇"],["781167","广西","南宁","横县","石塘镇政府","石塘镇"],["781157","广西","南宁","横县","南乡镇原政府","南乡镇"],["781147","广西","南宁","横县","板路中学","南乡镇板路村"],["781117","广西","南宁","横县","莲塘镇政府","莲塘镇"],["781107","广西","南宁","横县","校椅镇政府","校椅镇"],["781097","广西","南宁","横县","云表镇新仲村","云表镇"],["781067","广西","南宁","横县","陶圩镇派出所","陶圩镇"],["781057","广西","南宁","横县","平马镇政府","平马镇"],["781037","广西","南宁","横县","平朗乡政府","平朗乡"],["781027","广西","南宁","横县","峦城镇政府","峦城镇"],["781017","广西","南宁","横县","六景镇政府","六景镇"],["698310","吉林","松原　","前郭县","海勃日噶镇政府","海勃日噶镇"],["686081","山东","聊城","冠县","冠县北馆陶炮点","冠县北馆陶"],["658331","重庆","重庆","开县","竹溪","竹溪"]];
+	function parseError2(){
+		station_auto = error_data_2;
+		geocodeSearch();
+	}
+	var error_data_3 = [["895718","新疆","石河子","玛纳斯县","石河子玛纳斯县清水河乡芦草沟村","清水河乡芦草沟村"],["895562","新疆","昌吉州","玛纳斯","南泥沟","南泥沟"],["895556","新疆","昌吉州","阜康","西沟河","西沟河"],["895550","新疆","昌吉州","木垒","大东山","大东山"],["895531","新疆","昌吉州","木垒","木垒英格堡","英格堡"],["895219","新疆","伊犁州","察布查尔","坎乡中学","坎乡"],["895204","新疆","伊犁州","霍城","大西沟村村委会","大西沟"],["698310","吉林","松原　","前郭县","海勃日噶镇政府","海勃日噶镇"],["686081","山东","聊城","冠县","冠县北馆陶炮点","冠县北馆陶"],["658331","重庆","重庆","开县","竹溪","竹溪"]];
+	function parseError3(){
+		station_auto = error_data_3;
+		geocodeSearch();
+	}
+	//http://www.gpsspg.com/maps.htm 手动查询
+	var error_data_4 = [["895550","新疆","昌吉州","木垒","大东山","大东山"],["895531","新疆","昌吉州","木垒","木垒英格堡","英格堡"],["895219","新疆","伊犁州","察布查尔","坎乡中学","坎乡"],["895204","新疆","伊犁州","霍城","大西沟村村委会","大西沟"]];
+
+	var result_data_4 = [["895550",43.835253,90.288072],["895531",43.835253,90.288072],["895219",43.699287,81.553644],["895204",44.326357,80.781702]];
+	var $result = $("#result");
+	function parseError4(){
+		station_auto = error_data_4;
+		geocodeSearch();
+	}
+	var THREAD_NUM = 10;
+	function geocodeSearch(){
+		if(station_auto.length == 0){
+			var time_end = new Date().getTime();
+			console.log(result,result_error,time_end-time_start);
+			return;
+		}
+		var val = station_auto.shift();
+		var add = val[1];
+		//["896318","新疆","哈密地区","哈密市","哈密市三道岭矿区","三道岭矿区"]
+		// parse error 1 {
+		// var city = val[2];
+		// if(city){
+		// 	city = city.trim();
+		// }
+		// add += city;
+		// var district = val[3];
+		// if(district){
+		// 	district = district.trim();
+		// }
+		// if(district != city){
+		// 	add += district;
+		// }
+		// var address = val[4];
+		// if(address){
+		// 	address = address.trim();
+		// }
+		// if(address != city && address != district){
+		// 	add += address;
+		// }
+
+		// var name = val[5];
+		// if(name){
+		// 	name = name.trim();
+		// 	if(city){
+		// 		name = name.replace(city,'');
+		// 	}
+		// 	if(district){
+		// 		name = name.replace(district,'');
+		// 	}
+		// 	if(address){
+		// 		name = name.replace(address,'');
+		// 	}
+		// 	if(name){
+		// 		add += name;
+		// 	}
+		// }
+		// }parse error 1
+		// add += val[2]+val[3]+(val[4]||val[5]||''); // normal
+		// add += (val[4]||val[5]||'');// parse error 2
+		// add += val[3];// parse error 3
+		add += val[2].replace('州','')+val[5];// parse error 4
+		myGeo.getPoint(add, function(point){
+			if (point) {
+				result.push([val[0],point.lng, point.lat]);
+				var html = index + "、" + add + ":" + point.lng + "," + point.lat + "</br>";
+				
+				// var address = new BMap.Point(point.lng, point.lat);
+				// addMarker(address,new BMap.Label(index+":"+add,{offset:new BMap.Size(20,-10)}));
+			}else{
+				var html = index + "、" + add+ ":null</br>";
+				console.error(val,html);
+				result_error.push(val);
+			}
+			console.log(html);
+			// $result.html(html+$result.html());
+			index++;
+			setTimeout(geocodeSearch,200);
+		});
+	}
+	
+	// 编写自定义函数,创建标注
+	function addMarker(point,label){
+		var marker = new BMap.Marker(point);
+		map.addOverlay(marker);
+		marker.setLabel(label);
+	}
+</script>

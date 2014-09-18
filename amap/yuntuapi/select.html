@@ -1,0 +1,67 @@
+<script type="text/javascript" src="../jquery-1.8.2.js"></script>
+<script type="text/javascript">
+!function(){
+	var perNum = 100;
+	function getData(page,callback){
+		$.getJSON('http://yuntuapi.amap.com/datasearch/local?key=b275e5bb60f88f24dc042cb1d1a518d0&tableid=53f1740be4b0dfd37f7460ab&keywords= &city=全国&limit='+perNum+'&page='+page,callback);
+	}
+	var currentPage = 1;
+	function update(data,formatFn){
+		setTimeout(function(){
+			data = formatFn(data);
+			if(data){
+				var settings = {
+			        type: "POST",
+			        url: 'http://yuntuapi.amap.com/datamanage/data/update',
+			        data: {
+			        	key: 'b275e5bb60f88f24dc042cb1d1a518d0',
+			        	tableid: '53f1740be4b0dfd37f7460ab',
+			        	data: data
+			        },
+			        error: function(XHR,textStatus,errorThrown) {
+			            console.log ("XHR="+XHR+"\ntextStatus="+textStatus+"\nerrorThrown=" + errorThrown);
+			        },
+			        success: function(data,textStatus) {
+			            console.log(data);
+			        },
+			        headers: {
+			            "Content-Type":"application/x-www-form-urluncoded"
+			        }
+			    };
+			    $.ajax(settings);
+			}
+		},10);
+	}
+	var formateData = function(data){
+		if(data.mobile_item_id == '' || data.mobile_item_id.length > 3){
+			return JSON.stringify({
+	    		_id: data._id,
+	    		mobile_item_id: "1"
+	    	})
+		}
+	}
+	var formateDataCreate = function(data){
+		if(data.d_ctime == ''){
+			return JSON.stringify({
+	    		_id: data._id,
+	    		d_ctime: new Date(data._createtime).getTime()
+	    	})
+		}
+	}
+	function deal(){
+		getData(currentPage,function(data){
+			$.each(data.datas,function(i,v){
+				update(v,formateDataCreate);
+			});
+			var count = data.count;
+			var page = Math.floor( count / perNum );
+		console.log(count,page,currentPage,data.datas.length);
+			if(page >= currentPage){
+				currentPage++;
+				deal();
+			}
+		});
+	}
+	deal();
+}();
+</script>
