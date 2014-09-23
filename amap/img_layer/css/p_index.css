@@ -427,6 +427,45 @@ body{
 	display: none;
 }
 
+.bg_null .bg{
+	display: none;
+}
+.bg_null .locate{
+	color: #000;
+	background: white;
+	padding-left: 0;
+}
+.bg_null .info{
+	box-shadow: 1px 1px 5px rgba(0,0,0,.6);
+}
+.bg_null #btn_play{
+	background: rgba(0,0,0,0.4);
+	border-radius: 25px;
+	box-shadow: 1px 1px 4px rgba(0,0,0,0.7);
+}
+.bg_null .tool_bar{
+	display: none;
+}
+.bg_null .map_container{
+	box-shadow: 0 1px 10px rgba(0,0,0,.6);
+}
+.bg_null #play_time{
+	color: #000;
+}
+.bg_null #btn_share{
+	display: none;
+}
+.no_js .info{
+	display: none;
+}
+.no_js #map{
+	height: 500px;
+}
+.no_js .map_c{
+	height: auto;
+}
+
+
 /*for moile*/
 /*@media screen and (max-device-width: 600px) {*/
 @media screen and (max-width: 600px){

@@ -115,7 +115,6 @@
 				}catch(e){}
 			}
 			
-			console.log(callback+' '+JSON.stringify(param));
 			callback && callback(param);
 		}
 	}();
@@ -181,10 +180,10 @@
         	var isRuned = false;
         	var timeoutTT;
         	return function(type,isFromIP){
-        		// timeoutTT = setTimeout(function(){
-	        	// 	isRuned = true;
-        		// 	errorFn(type);
-        		// },timeout);
+        		timeoutTT = setTimeout(function(){
+	        		isRuned = true;
+        			errorFn(type);
+        		},timeout);
         		U.command('getGeo',function(data){
         			// clearTimeout(timeoutTT);
 	        		// if(isRuned){
@@ -229,6 +228,7 @@
 	}
 
 	var getJSONP = function(url,fn_success,fn_error){
+		console.log(url);
 		$.ajax({
             type : "get",
             url : url,
@@ -248,7 +248,39 @@
 			showNetWorkStatus();
 		}
 	});
+	// mt->maptype
+	// auto_play
+	// getParam -> img type
+	// a_img -> is show all image
+	// zoom -> map zoom
+	// bg_white -> bg_null
+	var str_search_from_command;
+	var getParam = function(){
+		str_search_from_command = U.command('getLocationSearch');
+		var searchStr = decodeURIComponent(str_search_from_command||location.search.substr(1));
+		var arr = searchStr.split('#');
+		var searchArr = arr[0].split('&');
+
+        // var searchArr = decodeURIComponent(location.search).split('&');
+        var params = {};
+        for(var i = 0,j=searchArr.length;i<j;i++){
+            var v = searchArr[i].split('=');
+            if(v.length == 2){
+                params[v[0]] = v[1];
+            }
+        }
+        console.log(JSON.stringify(params));
+        return function (name,defaultVal){
+            return params[name] || defaultVal;
+        }
+    }();
+    var MAP_TYPE_SATELLITE = 1;
+    var mapType = getParam('mt');
 	$(function(){
+		var isBgWhite = !!getParam('bg_white');
+		if(isBgWhite){
+			$('body').addClass('bg_null');
+		}
 		var init_canvas_size = function(){
 			var info_width = $('#hour_rain').width(),
 				into_height = $('#hour_rain').height();
@@ -419,13 +451,16 @@
 			mapObj = new AMap.Map("map",{
 				scrollWheel: false,//可通过鼠标滚轮缩放地图
 		        doubleClickZoom: true, //可以双击鼠标放大地图
+		        //修改地图默认图层为卫星图
+        		// layers:[new AMap.TileLayer.Satellite()],
 		        view: new AMap.View2D({
 			        center: initLngLat,
-			        zoom: 4,
+			        zoom: parseInt(getParam('zoom'))||6,
 			        // touchZoom: true,
 			        crs:'EPSG3857'
 				})  //2D地图显示视口  
 			});
+			
 			// mapObj = new AMap.Map('map',{resizeEnable: true, center: initLngLat, level: 5, touchZoom: true});
 			AMap.event.addListener(mapObj,'complete',function(){
 				console.log('map complete');
@@ -436,18 +471,23 @@
 			        mapObj.addControl(toolBar);    
 			    });
 			});
-			//地图类型切换
-		    mapObj.plugin(["AMap.MapType"], function() {
-		        var type = new AMap.MapType({
-		        	defaultType: 0,
-		        	showRoad: true
-		        });//初始状态使用2D地图
-		        mapObj.addControl(type);
-		        // 地图类型改变时强制重绘
-		        $('.amap-maptype-con').click(function(){
-		        	renderImgLayer();
-		        });
-		    });
+			if(mapType == MAP_TYPE_SATELLITE){
+				mapObj.setLayers([new AMap.TileLayer.Satellite(),new AMap.TileLayer.RoadNet()]);
+			}else{
+				//地图类型切换
+			    mapObj.plugin(["AMap.MapType"], function() {
+			        var type = new AMap.MapType({
+			        	defaultType: 0,
+			        	showRoad: true
+			        });//初始状态使用2D地图
+			        mapObj.addControl(type);
+			        // 地图类型改变时强制重绘
+			        $('.amap-maptype-con').click(function(){
+			        	renderImgLayer();
+			        });
+			    });
+			}
+			
 			// mapObj = new AMap.Map('map',{resizeEnable: true, center: initLngLat, level: 5, touchZoom: true});
 
 			var lngLatCache;
@@ -676,11 +716,13 @@
 			'radar': {
 				name: '雷达图',
 				url: prefix_req+'imgs.php?type=radar',
+				isShowJS: true
 			},
 			'precipitation': {
 				name: '降水图',
 				url: prefix_req+'imgs.php?type=precipitation',
-				isSelected: true
+				isSelected: true,
+				isShowJS: true
 			},
 			'leidian': {
 				name: '雷电',
@@ -738,7 +780,7 @@
 				// 	minutes = '0'+minutes;
 				// }
 				// new_layer.time = hours+':'+minutes;
-				new_layer.time = v.l1.substr(11);
+				new_layer.time = v.l1.substr(11,5);
 				randar_layers.push(new_layer);
 			});
 			$play_time.text(randar_layers.slice(-1)[0].time);
@@ -760,8 +802,12 @@
 			$.getJSON(url,function(data){
 				var imgs = data.l.reverse();
 				renderImgLayer(imgs);
-				// Player.reset();
-				// Player.play();
+				var auto_play = !!getParam('auto_play',false);
+				if(auto_play){
+					Player.reset();
+					Player.play();
+				}
+				
 			});
 		}
 		var $tool_bar = $('.tool_bar').click(function(e){
@@ -771,14 +817,27 @@
 				$target.parent().addClass('on').siblings().removeClass('on');
 			}
 		});
+		var img_type = getParam('it');
+		
 		for(var i in imgLayerConf){
 			var item = imgLayerConf[i];
-			var $div = $('<div><span data-type="'+i+'">'+item.name+'</span></div>').data('type',i);
-			if(item.isSelected){
-				$div.addClass('on');
+			if(img_type == i){
 				defaultSetting = i;
+				break;
+			}else{
+				var $div = $('<div><span data-type="'+i+'">'+item.name+'</span></div>').data('type',i);
+				if(item.isSelected){
+					$div.addClass('on');
+					defaultSetting = i;
+				}
+				$tool_bar.append($div);
 			}
-			$tool_bar.append($div);
+		}
+		console.log(defaultSetting,imgLayerConf[defaultSetting].isShowJS);
+		if(imgLayerConf[defaultSetting].isShowJS){
+			$('body').removeClass('no_js');
+		}else{
+			$('#map').height(win_height - 180);
 		}
 		var REG_DATA_TIME = /(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/;
 		var DATA_TYPE_MYSELF = 1,
@@ -809,69 +868,80 @@
 		}
 		var last_data;//最后的可用数据
 		var last_data_type;
+		var delay_refresh = 1000*60*10;
 		function refresh (lon,lat) {
-			var urlnow = document.URL;
-		    urlnow = urlnow.split("#")[0];
-		    var lnglat = (Number(lon).toFixed(4))+","+(Number(lat).toFixed(4));
-		    var newUrl = urlnow+"#"+lnglat;
-			history.pushState({},title,newUrl);
+			var lnglat = (Number(lon).toFixed(4))+","+(Number(lat).toFixed(4));
+			if(!str_search_from_command){
+				var urlnow = document.URL;
+		    	urlnow = urlnow.split("#")[0];
+		    	var newUrl = urlnow+"#"+lnglat;
+				history.pushState({},title,newUrl);
+			}
+			
+		    
+		    
 			clearTimeout(refreshTT);
 			mapTool.resetCenter(lon,lat);
-			$desc.html('&nbsp;');
 			lnglatToAddress(lon,lat,function(result){
 				$('.locate').text(result);
 			});
-			ajax_data && ajax_data.abort();
-			
-			if(is_use_myself_data){
-				var url = prefix_req+"data_test.php?lonlat="+[lon,lat].join(',');
-				var formatData = formatMySelfData;
-			}else{
-				var url = prefix_req+'data.php?lonlat='+[lon,lat].join(',');
-				var formatData = function(d){return d;};
-			}
-			
-			
-			getJSONP(url,function(data){
-				data = formatData(data);
+			if(imgLayerConf[defaultSetting].isShowJS){
+				$desc.html('&nbsp;');
+				ajax_data && ajax_data.abort();
 				
-				if(last_data_type == data.type && data_server_time > data.server_time){
-					return;
+				if(is_use_myself_data){
+					var url = prefix_req+"data_test.php?lonlat="+[lon,lat].join(',');
+					var formatData = formatMySelfData;
+				}else{
+					var url = prefix_req+'data.php?lonlat='+[lon,lat].join(',');
+					var formatData = function(d){return d;};
 				}
-				last_data_type = data.type;
-				data_server_time = data.server_time;
-				if(data.status != 'ok'){
-					alert(errorReason[data.error_type[0]]);
-					return;
-				}
-				radar_desc = data.summary;
-				$desc.text(data.summary);
-				rainfall_data = data.dataseries;
-				if(data.temp < -2){
-					$('.level_c .leve_1:eq(1) span').text('大雪');
-					$('.level_c .leve_1:eq(2) span').text('中雪');
-					$('.level_c .leve_1:eq(3) span').text('小雪');
-				}
-				drawSector();
-				share();
-				// Player.reset();
-				// Player.play();
-
-				refreshTT = setTimeout(function(){
-					refresh(lon,lat);
-				},1000*60);
-			},function(){
-				U.command('isCanUseNetwork',function(flag){
-					if(!flag){
-						showNetWorkStatus();
+				
+				
+				getJSONP(url,function(data){
+					data = formatData(data);
+					
+					if(last_data_type == data.type && data_server_time > data.server_time){
+						return;
 					}
+					last_data_type = data.type;
+					data_server_time = data.server_time;
+					if(data.status != 'ok'){
+						alert(errorReason[data.error_type[0]]);
+						return;
+					}
+					radar_desc = data.summary;
+					$desc.text(data.summary);
+					rainfall_data = data.dataseries;
+					var t = data.temp < -2?'雪':'雨';
+					$('.level_c .leve_1:eq(1) span').text('大'+t);
+					$('.level_c .leve_1:eq(2) span').text('中'+t);
+					$('.level_c .leve_1:eq(3) span').text('小'+t);
+					drawSector();
+					share();
+					// Player.reset();
+					// Player.play();
 
 					refreshTT = setTimeout(function(){
 						refresh(lon,lat);
-					},1000*60);
+					},delay_refresh);
+				},function(){
+					U.command('isCanUseNetwork',function(flag){
+						if(!flag){
+							showNetWorkStatus();
+						}
+
+						refreshTT = setTimeout(function(){
+							refresh(lon,lat);
+						},delay_refresh);
+					});
 				});
-			});
-			console.log(lnglat);
+			}else{
+				refreshTT = setTimeout(function(){
+					refresh(lon,lat);
+				},delay_refresh);
+			}
+			
 			initImgLayer(currentImgType,lnglat);
 		}
         function afterGeo(){
@@ -882,6 +952,7 @@
         var mapTool;
         window[callbackName] = function(){
 	        U.command('hideRadar');
+	        console.log('after hideRadar');
 	        U.command('checkVersion');
         	mapTool = mapInit();
         	// initImgLayer(defaultSetting);
@@ -910,7 +981,7 @@
         }
         $.getScript('http://webapi.amap.com/maps?v=1.3&key=d0e895a4c4b5f0c632f8ed3985f0247f&callback='+callbackName).fail(showNetWorkStatus);
 
-        var is_show_all_img = false,
+        var is_show_all_img = !!getParam('a_img',false),
         	is_use_myself_data = true;
         if(location.href.indexOf('debug')> -1){
         	$('.tab_bar').show();
