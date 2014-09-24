@@ -376,6 +376,16 @@
 		var randar_layers = [];
 		var domain = 'http://rain.swarma.net'
 		var $play_time = $('#play_time');
+		function _setOpacity(index){
+			var $div = $('.amap-layers div').filter(function(){
+				var $this = $(this);
+				if(!$this.attr('class') && $this.children().first().is('img')){
+					return $this;
+				}
+			});
+			$div.css('opacity',0);
+			$div.eq(index).css('opacity',1);
+		}
 		/*播放器*/
 		var Player = (function(){
 			
@@ -398,13 +408,13 @@
 			var play = function(){
 				isPlaying = true;
 				oldLayer = randar_layers[currentIndex];
-				oldLayer.setOpacity(0);
-				
+				// oldLayer.setOpacity(0);
 				var len = randar_layers.length;
 				var nextIndex = currentIndex+1 < len?currentIndex+1:0;
 				newLayer = randar_layers[nextIndex];
 
-				newLayer.setOpacity(showOpacity);
+				_setOpacity(nextIndex);
+				// newLayer.setOpacity(showOpacity);
 				$play_time.text(newLayer.time);
 				oldLayer = newLayer;
 				currentIndex = nextIndex;
@@ -707,7 +717,7 @@
 		var ajax_data;
 		var refreshTT;
 		var title = document.title || '天气管家';
-		var showOpacity = 0.6;
+		var showOpacity = 0.4;
 		var imgLayerConf = {
 			'cloud': {
 				name: '云图',
@@ -715,8 +725,7 @@
 			},
 			'radar': {
 				name: '雷达图',
-				url: prefix_req+'imgs.php?type=radar',
-				isShowJS: true
+				url: prefix_req+'imgs.php?type=radar'
 			},
 			'precipitation': {
 				name: '降水图',
@@ -769,6 +778,7 @@
 					clickable: false
 				});
 				new_layer.setMap(mapObj);
+
 				new_layer.setOpacity(i==0?showOpacity:0);
 				var time = new Date(v[1]*1000);
 				// var hours = time.getHours();
@@ -783,6 +793,12 @@
 				new_layer.time = v.l1.substr(11,5);
 				randar_layers.push(new_layer);
 			});
+			$('.amap-layers div').filter(function(){
+				var $this = $(this);
+				if($this.children().first().is('img')){
+					return $this;
+				}
+			}).css('opacity',0);
 			$play_time.text(randar_layers.slice(-1)[0].time);
 		}
 		var currentImgType;
