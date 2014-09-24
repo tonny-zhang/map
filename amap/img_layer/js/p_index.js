@@ -384,7 +384,7 @@
 				}
 			});
 			$div.css('opacity',0);
-			$div.eq(index).css('opacity',1);
+			$div.eq(index).css('opacity',showOpacity);
 		}
 		/*播放器*/
 		var Player = (function(){
@@ -779,7 +779,7 @@
 				});
 				new_layer.setMap(mapObj);
 
-				new_layer.setOpacity(i==0?showOpacity:0);
+				// new_layer.setOpacity(i==0?showOpacity:0);
 				var time = new Date(v[1]*1000);
 				// var hours = time.getHours();
 				// if(hours < 10){
@@ -793,12 +793,7 @@
 				new_layer.time = v.l1.substr(11,5);
 				randar_layers.push(new_layer);
 			});
-			$('.amap-layers div').filter(function(){
-				var $this = $(this);
-				if($this.children().first().is('img')){
-					return $this;
-				}
-			}).css('opacity',0);
+			_setOpacity(0);
 			$play_time.text(randar_layers.slice(-1)[0].time);
 		}
 		var currentImgType;

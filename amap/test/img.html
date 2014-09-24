@@ -5,13 +5,26 @@
     	<meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0,user-scalable=no" />
     	<meta name="format-detection" content="telephone=no" />
     	<title>地图添加图片图层</title>
+    	<style>
+    	#main{
+    		height: 400px;
+    		position: relative;
+    	}
+    	#btn_change{
+    		position: absolute;
+    		z-index: 999;
+    		left: 30px;
+    		top: 30px;
+    	}
+    	</style>
 	</head>
 	<body >
 		<div id="main">
 			<input id="btn_change" type="button" value="change opacity"/>
 			<div id="map"></div>
 		</div>
-		<script type="text/javascript" src="http://webapi.amap.com/maps?v=1.3&key=d0e895a4c4b5f0c632f8ed3985f0247f"></script>
+		<!--<script type="text/javascript" src="http://webapi.amap.com/maps?v=1.3&key=da15132e0fa88a1d4296f8d83cdf8957"></script>-->
+		<script type="text/javascript" src="./amap.js"></script>
 		<script type="text/javascript">
 		var mapObj = new AMap.Map("map",{
 			scrollWheel: false,//可通过鼠标滚轮缩放地图
@@ -45,13 +58,17 @@
 			map: mapObj,
 			clickable: false
 		});
+		// AMap.GroundImage.prototype.setOpacity = function(opacity){
+		// 	this.Yd.options[0].$f.va.style.opacity = opacity;
+		// }
 		new_layer.setMap(mapObj);
-
+console.log(new_layer,new_layer.show);
 		var current_opacity = 1;
 		document.getElementById('btn_change').onclick = function(){
 			current_opacity = current_opacity == 1?0: 1;
-			console.log(current_opacity);
+			console.log('toOpacity = ',current_opacity);
 			new_layer.setOpacity(current_opacity);
+			
 		}
 		</script>
 	</body>
