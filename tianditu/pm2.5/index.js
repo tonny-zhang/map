@@ -65,7 +65,7 @@ $(function(){
 					var color = getColor(_pm25data['pm2_5']);
 					clearPolygon();
 					var infoWin = new TInfoWindow(marker.getLngLat());
-					infoWin.setLabel(_pm25data.position_name+'<br/>PM2.5： '+_pm25data.pm2_5+'('+_pm25data.quality+')<br/>AQI：'+_pm25data.aqi);
+					infoWin.setLabel(_pm25data.position_name+'('+_pm25data.quality+')<br/>PM2.5： '+_pm25data.pm2_5+'<br/>AQI：'+_pm25data.aqi);
 					infoWin.closeInfoWindowWithMouse();
 					map.addOverLay(infoWin); 
 					if('Polygon' == type){
