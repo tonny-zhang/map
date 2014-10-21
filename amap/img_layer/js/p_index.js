@@ -3,7 +3,7 @@
 /*根据定位得到城市信息*/
 !function(){
 	var prefix_req = 'http://radar.tianqi.cn/radar/';//location.host != 'radar.tianqi.cn'?'http://radar.tianqi.cn/radar/':'./';
-	// prefix_req = "http://10.14.85.116/php/randar/";
+	// prefix_req = "http://10.14.85.116/php/radar/";
 	var U = {};
 	window.Util = U;
 	var OS = (function(){
@@ -192,10 +192,10 @@
 	        		if(!data || data.e){
 	        			var errMsg = '定位出现错误！'
 	        			if(isFromIP){
-	        				alert(errMsg);
+	        				// console.log(errMsg);
 	        			}else{
 	        				geoIP(function(){
-		        				alert(errMsg);
+		        				// console.log(errMsg);
 		        			});
 	        			}
 	        			
@@ -250,10 +250,11 @@
 	});
 	// mt->maptype
 	// auto_play
-	// getParam -> img type
+	// it -> img type
 	// a_img -> is show all image
 	// zoom -> map zoom
 	// bg_white -> bg_null
+	// use_my -> is_use_myself_data
 	var str_search_from_command;
 	var getParam = function(){
 		str_search_from_command = U.command('getLocationSearch');
@@ -271,7 +272,15 @@
         }
         console.log(JSON.stringify(params));
         return function (name,defaultVal){
-            return params[name] || defaultVal;
+        	
+        	var v = params[name];
+        	if(!isNaN(v)){
+        		v = Number(v);
+        	}
+        	if(!v && v !== '' && v != 0){
+        		v = defaultVal;
+        	}
+            return  v;
         }
     }();
     var MAP_TYPE_SATELLITE = 1;
@@ -282,6 +291,7 @@
 			$('body').addClass('bg_null');
 		}
 		var init_canvas_size = function(){
+			console.log($('#hour_rain').width(),$('#hour_rain').outerWidth());
 			var info_width = $('#hour_rain').width(),
 				into_height = $('#hour_rain').height();
 			var width = info_width > 600?info_width-40:info_width;
@@ -290,7 +300,7 @@
 				height: into_height
 			});
 		}
-		init_canvas_size();
+		// init_canvas_size();
 		var resize_tt;
 		window.onresize = function(){
 			resize_tt = setTimeout(function(){
@@ -311,6 +321,7 @@
 		})();
 		var rainfall_data ;
 		function draw_canvas(c, startTime) {
+			console.log(rainfall_data);
 		  if (rainfall_data != undefined) {
 
 		    // update
@@ -364,7 +375,6 @@
 		    }
 		  }
 
-		  // request new frame
 		  requestAnimFrame(function() {
 		    draw_canvas(c, startTime);
 		  });
@@ -376,16 +386,7 @@
 		var randar_layers = [];
 		var domain = 'http://rain.swarma.net'
 		var $play_time = $('#play_time');
-		function _setOpacity(index){
-			var $div = $('.amap-layers div').filter(function(){
-				var $this = $(this);
-				if(!$this.attr('class') && $this.children().first().is('img')){
-					return $this;
-				}
-			});
-			$div.css('opacity',0);
-			$div.eq(index).css('opacity',showOpacity);
-		}
+		
 		/*播放器*/
 		var Player = (function(){
 			
@@ -408,13 +409,12 @@
 			var play = function(){
 				isPlaying = true;
 				oldLayer = randar_layers[currentIndex];
-				// oldLayer.setOpacity(0);
+				oldLayer.setOpacity(0);
 				var len = randar_layers.length;
 				var nextIndex = currentIndex+1 < len?currentIndex+1:0;
 				newLayer = randar_layers[nextIndex];
 
-				_setOpacity(nextIndex);
-				// newLayer.setOpacity(showOpacity);
+				newLayer.setOpacity(showOpacity);
 				$play_time.text(newLayer.time);
 				oldLayer = newLayer;
 				currentIndex = nextIndex;
@@ -522,16 +522,39 @@
 	    		mapObj.setCenter(lngLat);
 	        	setMarker(lngLat);
 	    	}
+
+	    	var isSupportTouch = 'ontouchstart' in window;
+	    	var mousedownTT;
+	    	var oldPixel;
 			//为地图注册click事件获取鼠标点击出的经纬度坐标
-		    var clickEventListener=AMap.event.addListener(mapObj,'click',function(e){
-		    	console.log('map click');
-		        initLon = e.lnglat.getLng(),
-		       	initLat = e.lnglat.getLat();
-		        	console.log(initLon,initLat);
-		        // setCenter(lon,lat);
-		        var lngLat = new AMap.LngLat(initLon,initLat);
-		        // setMarker(lngLat);
-		        refresh(initLon,initLat);
+		    var clickEventListener = AMap.event.addListener(mapObj,isSupportTouch?'touchstart':'mousedown',function(e){
+		    	oldPixel = e.pixel;
+		    	mousedownTT = setTimeout(function(){
+		    		if(isSupportTouch){
+		    			// alert(e.touches)
+		    		}
+		    		initLon = e.lnglat.getLng(),
+			       	initLat = e.lnglat.getLat();
+			        // setCenter(lon,lat);
+			        var lngLat = new AMap.LngLat(initLon,initLat);
+			        // setMarker(lngLat);
+			        refresh(initLon,initLat);
+		    	},1000);
+		    });
+		    var MIN_DIS = 100;
+		    AMap.event.addListener(mapObj,isSupportTouch?'touchmove':'mousemove',function(e){
+		    	if(oldPixel){
+			    	var newPixed = e.pixel;
+			    	var x = Math.abs(newPixed.x - oldPixel.x);
+			    	var y = Math.abs(newPixed.y - oldPixel.y);
+			    	if(x > MIN_DIS || y > MIN_DIS ){
+						clearTimeout(mousedownTT);
+					}
+		    	}
+		    	
+		    });
+		    AMap.event.addListener(mapObj,isSupportTouch?'touchend':'mouseup',function(e){
+		    	clearTimeout(mousedownTT);
 		    });
 		    return {
 		    	clearLayer: function(){
@@ -717,20 +740,21 @@
 		var ajax_data;
 		var refreshTT;
 		var title = document.title || '天气管家';
-		var showOpacity = 0.4;
+		var showOpacity = 0.6;
 		var imgLayerConf = {
 			'cloud': {
 				name: '云图',
 				url: prefix_req+'imgs.php?type=cloud',
+				isSelected: true,
 			},
 			'radar': {
 				name: '雷达图',
-				url: prefix_req+'imgs.php?type=radar'
+				url: prefix_req+'imgs.php?type=radar',
+				isShowJS: true
 			},
 			'precipitation': {
 				name: '降水图',
 				url: prefix_req+'imgs.php?type=precipitation',
-				isSelected: true,
 				isShowJS: true
 			},
 			'leidian': {
@@ -779,7 +803,7 @@
 				});
 				new_layer.setMap(mapObj);
 
-				// new_layer.setOpacity(i==0?showOpacity:0);
+				new_layer.setOpacity(i==0?showOpacity:0);
 				var time = new Date(v[1]*1000);
 				// var hours = time.getHours();
 				// if(hours < 10){
@@ -793,16 +817,31 @@
 				new_layer.time = v.l1.substr(11,5);
 				randar_layers.push(new_layer);
 			});
-			_setOpacity(0);
 			$play_time.text(randar_layers.slice(-1)[0].time);
 		}
 		var currentImgType;
-		function initImgLayer(type,lnglat){
+		var $info = $('.info') ,
+			$body = $('body');
+		function initImgLayer(type,lnglat,isFromRefresh){
 			type = type || defaultSetting;
-			// if(type == currentImgType){
-			// 	return;
-			// }
 			currentImgType = type;
+
+			if(!isFromRefresh){
+				if($info.css('position') == 'absolute'){
+					var isShowJS = imgLayerConf[type]['isShowJS'];
+					if(isShowJS){
+						$body.removeClass('no_js');
+						// $info.show();
+						refresh(initLon,initLat);
+						// init_canvas_size();
+						// drawSector();
+					}else{
+						$body.addClass('no_js');
+						// $info.hide();
+					}
+				}
+			}
+			
 			Player.reset();
 			// Player.play();
 			var url = imgLayerConf[type]['url'];
@@ -896,7 +935,7 @@
 			lnglatToAddress(lon,lat,function(result){
 				$('.locate').text(result);
 			});
-			if(imgLayerConf[defaultSetting].isShowJS){
+			if(imgLayerConf[currentImgType || defaultSetting].isShowJS){
 				$desc.html('&nbsp;');
 				ajax_data && ajax_data.abort();
 				
@@ -918,7 +957,7 @@
 					last_data_type = data.type;
 					data_server_time = data.server_time;
 					if(data.status != 'ok'){
-						alert(errorReason[data.error_type[0]]);
+						// console.log(errorReason[data.error_type[0]]);
 						return;
 					}
 					radar_desc = data.summary;
@@ -928,6 +967,7 @@
 					$('.level_c .leve_1:eq(1) span').text('大'+t);
 					$('.level_c .leve_1:eq(2) span').text('中'+t);
 					$('.level_c .leve_1:eq(3) span').text('小'+t);
+					init_canvas_size();
 					drawSector();
 					share();
 					// Player.reset();
@@ -953,7 +993,7 @@
 				},delay_refresh);
 			}
 			
-			initImgLayer(currentImgType,lnglat);
+			initImgLayer(currentImgType,lnglat,true);
 		}
         function afterGeo(){
         	console.log('afterGeo:initLon = '+initLon+',initLat = '+initLat);
@@ -993,14 +1033,15 @@
         $.getScript('http://webapi.amap.com/maps?v=1.3&key=d0e895a4c4b5f0c632f8ed3985f0247f&callback='+callbackName).fail(showNetWorkStatus);
 
         var is_show_all_img = !!getParam('a_img',false),
-        	is_use_myself_data = true;
+        	is_use_myself_data = !!getParam('use_my',true);
         if(location.href.indexOf('debug')> -1){
         	$('.tab_bar').show();
-        	is_show_all_img = $('[name=all_img]').on('click',function(){
+        	console.log(is_show_all_img,is_use_myself_data);
+        	is_show_all_img = $('[name=all_img]').prop('checked',is_show_all_img).on('click',function(){
         		is_show_all_img = $(this).prop('checked');
         		initImgLayer(currentImgType,[initLon,initLat].join());
         	}).prop('checked');
-        	is_use_myself_data = $('[name=data]').on('click',function(){
+        	is_use_myself_data = $('[name=data]').prop('checked',is_use_myself_data).on('click',function(){
         		is_use_myself_data = $(this).prop('checked');
         		refresh(initLon,initLat);
         	}).prop('checked');
