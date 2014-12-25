@@ -1,0 +1,3 @@
+<sos:GetResult xmlns:sos="http://www.opengis.net/sos/1.0" service="SOS" version="1.0.0">
+	<sos:ObservationTemplateId>ot_16</sos:ObservationTemplateId>
+</sos:GetResult>

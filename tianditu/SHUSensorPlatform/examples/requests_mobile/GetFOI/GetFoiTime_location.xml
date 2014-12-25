@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GetFeatureOfInterestTime xmlns:ogc="http://www.opengis.net/ogc" xmlns="http://www.opengis.net/sos/1.0" xmlns:gml="http://www.opengis.net/gml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/sos/1.0 http://schemas.opengis.net/sos/1.0.0/sosAll.xsd"
+service="SOS" version="1.0.0" mobileEnabled="true">
+ <domainFeature>
+	<ogc:BBOX>
+		<ogc:PropertyName>urn:ogc:data:location</ogc:PropertyName>
+		<gml:Envelope srsName="urn:ogc:def:crs:EPSG::4326">
+			<gml:lowerCorner>51.883906 8.76667</gml:lowerCorner>
+			<gml:upperCorner>51.883906 9.16667</gml:upperCorner>
+		</gml:Envelope>
+	</ogc:BBOX>
+ </domainFeature>
+<FeatureOfInterestId>foi_10001</FeatureOfInterestId>
+</GetFeatureOfInterestTime>

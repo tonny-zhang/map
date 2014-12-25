@@ -1,0 +1,52 @@
+<html>
+	<body>
+		<script type="text/javascript">
+		var CON_MERCATOR = 20037508.34/180,
+			CON_LONLAT = 20037508.34*180;
+		function lonLat2Mercator(lonlat){
+			var x = lonlat.x * 20037508.34/180;
+			var y = Math.log(Math.tan((90+lonlat.y)*Math.PI/360))/(Math.PI/180);
+			y = y*20037508.34/180;
+			return {x: x,y: y};
+		}
+		function mercator2lonLat(mercator){
+			var x = mercator.x/20037508.34*180;
+			var y = mercator.y/20037508.34*180;
+			y = 180/Math.PI*(2*Math.atan(Math.exp(y*Math.PI/180))-Math.PI/2);
+			return {x: x,y: y};
+		}
+		var lonlat = {x: 61.6113,y: 35.4638};
+		var xy = lonLat2Mercator(lonlat);
+		console.log(xy);
+		var new_lonlat = mercator2lonLat(xy);
+		console.log(new_lonlat);
+
+		// var lonlat={x:114.514864,y:38.04232};
+		//   var mercator={x:12747736.346966475,y:4585405.935084799};
+
+		//   //经纬度转墨卡托
+		//   function lonlat2mercator(lonlat){
+		// 	var  mercator={x:0,y:0};
+		// 	var x = lonlat.x *20037508.34/180;
+		// 	var y = Math.log(Math.tan((90+lonlat.y)*Math.PI/360))/(Math.PI/180);
+		// 	y = y *20037508.34/180;
+		// 	mercator.x = x;
+		// 	mercator.y = y;
+		// 	return mercator ;
+		//    }
+
+		//  //墨卡托转经纬度
+		//  function mercator2lonlat(mercator){
+		// 	var lonlat={x:0,y:0};
+		// 	var x = mercator.x/20037508.34*180;
+		// 	var y = mercator.y/20037508.34*180;
+		// 	y= 180/Math.PI*(2*Math.atan(Math.exp(y*Math.PI/180))-Math.PI/2);
+		// 	lonlat.x = x;
+		// 	lonlat.y = y;
+		// 	return lonlat;
+		//  }
+		//  console.log(lonlat2mercator(lonlat));
+		//  console.log(mercator2lonlat(mercator));
+		</script>
+	</body>
+</html>

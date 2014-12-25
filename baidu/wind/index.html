@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+	  	<title>风流场展示</title>
+	  	<style>
+	  	html,body{height: 100%;}
+	  	body{
+	  		padding: 0;
+	  		margin: 0;
+	  	}
+	  	#map{
+	  		width: 100%;
+	  		height: 100%;
+	  	}
+	  	.layer_vector{
+	  		position: absolute;
+	  		z-index: 999;
+	  	}
+	  	#callout {
+			position: absolute;
+			visibility: hidden;
+			background: #fff;
+			padding: 10px;
+			z-index: 20000;
+			width: 150px;
+			height: 45px;
+			font-size: 11px;
+			border: 1px solid #bbb;
+			-moz-box-shadow: 3px 3px 3px rgba(0,0,0,.4);
+		  	-webkit-box-shadow: 3px 3px 3px rgba(0,0,0,.4);
+		  	box-shadow: 3px 3px 3px rgba(0,0,0,.4);
+			-moz-border-radius: 4px;
+		  	border-radius: 4px;
+		}
+		#legend{
+			position: absolute;
+			z-index: 1001;
+			left: 10px;
+			top: 40%;
+			display: none;
+		}
+		#map img{
+			opacity: 0.1;
+		}
+	  	</style>
+	</head>
+	<body>
+		<div id="legend">
+			<canvas id="legend1" width="80" height="20"></canvas>
+			1 mph
+			<br>		
+			<br>		
+			<canvas id="legend2" width="80" height="20"></canvas>
+			3 mph
+			<br>		
+			<br>		
+			<canvas id="legend3" width="80" height="20"></canvas>
+			5 mph
+			<br>		
+			<br>		
+			<canvas id="legend4" width="80" height="20"></canvas>
+			10 mph
+			<br>		
+			<br>		
+			<canvas id="legend5" width="80" height="20"></canvas>
+			15 mph
+			<br>		
+			<br>		
+			<canvas id="legend6" width="80" height="20"></canvas>
+			30 mph
+			<br></div>
+		<div id="map"></div>
+		<div id="callout"></div>
+		<script type="text/javascript" src="http://i.tq121.com.cn/j/jquery-1.8.2.js"></script>
+		<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=E8MDMS4BVFEMeAxVP3YddQ6X"></script>
+		<script type="text/javascript" src="./data/world-14112008.000.js"></script>
+		<script type="text/javascript" src="index.js"></script>
+	</body>
+</html>

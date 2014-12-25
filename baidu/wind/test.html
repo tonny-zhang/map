@@ -1,0 +1,95 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>用JS模拟太空流星的立体效果 酷站代码|www.5icool.org</title>
+</head>
+<body bgcolor=black>
+	<script language="JavaScript"> <!-- 
+	if (document.all) {
+	xL = 5;
+	xH = 0;
+	xW = 0;
+	xR = 0;
+	xE = 0;
+	xMY = 0;
+	xMX = 0;
+	xWd = 0;
+	xHd = 0;
+	xF = new Array();
+	xY = new Array();
+	xX = new Array();
+	xS = new Array();
+	xA = new Array();
+	xB = new Array();
+	ini = new Array();
+	cl = new Array('#fff000', '#0000FF', '#ff0000', '#00ff00', '#ff00ff', '#ffa500') 
+	document.write('<div id="xouter" style="position:absolute;top:0px;left:0px"><div style="position:relative">');
+	for (i = 0; i < xL; i++) {
+		document.write('<div id="xie" style="position:absolute;top:0;left:0;width:10px;height:10px;' + 'font-family:Courier New;font-size:50px;color:#ffffff">.</div>');
+	}
+	document.write('</div></div>'); //Initial Placement! 
+	function Set() {
+		for (i = 0; i < xL; i++) {
+			xH = window.document.body.offsetHeight;
+			xW = window.document.body.offsetWidth;
+			xA[i] = Math.round(Math.random() * xH);
+			xB[i] = Math.round(Math.random() * xW);
+			xS[i] = Math.random() * 0.07 + 0.05;
+			xR = Math.round(Math.random() * 3);
+			xE = Math.round(Math.random() * 2500 + 50) 
+			if (xR == 3) xB[i] = -xE;
+			if (xR == 2) xB[i] = xW + xE;
+			if (xR == 1) xA[i] = -xE;
+			if (xR == 0) xA[i] = xH;
+			xF[i] = xW / 14;
+		}
+	}
+	Set();
+
+	function Assign() {
+		xouter.style.top = document.body.scrollTop;
+		for (i = 0; i < xL; i++) {
+			xF[i] -= xS[i] * 25;
+			if (xF[i] < 4) xF[i] = 3;
+			xie[i].style.top = xY[i];
+			xie[i].style.left = xX[i];
+			xie[i].style.fontSize = xF[i];
+			xie[i].style.filter = 'glow(color=' + ini[i] + ', strength=' + xF[i] / 3 + ')';
+		}
+	}
+
+	function fly() {
+		var N = Math.floor(Math.random() * cl.length) 
+		xMY = window.document.body.clientHeight / 2;
+		xMX = window.document.body.clientWidth / 2;
+		xWd = Math.round(Math.random() * 40 + 5);
+		xHd = Math.round(Math.random() * 30 + 5);
+		for (i = 0; i < xL; i++) {
+			xY[i] = xA[i] += (xMY - xA[i]) * (xS[i]);
+			xX[i] = xB[i] += (xMX - xB[i]) * (xS[i]);
+			if ((xX[i] > xMX - xWd) && (xX[i] < xMX + xWd) && (xY[i] > xMY - xHd) && (xY[i] < xMY + xHd)) {
+				xH = window.document.body.offsetHeight;
+				xW = window.document.body.offsetWidth;
+				xA[i] = Math.round(Math.random() * xH);
+				xB[i] = Math.round(Math.random() * xW);
+				xS[i] = Math.random() * 0.05 + 0.05;
+				xR = Math.round(Math.random() * 3);
+				xE = Math.round(Math.random() * 50 + 50) 
+				if (xR == 3) xB[i] = -xE;
+				if (xR == 2) xB[i] = xW + xE;
+				if (xR == 1) xA[i] = -xE;
+				if (xR == 0) xA[i] = xH + xE;
+			}
+			if ((xX[i] < 0) || (xX[i] > xW) || (xY[i] < 0) || (xY[i] > xH)) {
+				xF[i] = xW / 14;
+				ini[i] = cl[N];
+			}
+		}
+		Assign();
+		setTimeout('fly()', 10);
+	}
+	fly();
+}</script>
+	<br />
+	<a href="http://www.5icool.org/">酷站代码</a>
+</body>
+</html>

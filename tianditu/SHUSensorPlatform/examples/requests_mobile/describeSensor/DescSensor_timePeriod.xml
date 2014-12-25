@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DescribeSensor version="1.0.0" service="SOS" mobileEnabled="true" xmlns="http://www.opengis.net/sos/1.0" 
+xmlns:gml="http://www.opengis.net/gml"
+xmlns:ogc="http://www.opengis.net/ogc"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/sos/1.0 http://schemas.opengis.net/sos/1.0.0/sosDescribeSensor.xsd" outputFormat="text/xml;subtype=&quot;sensorML/1.0.1&quot;">
+	<procedure>urn:ogc:object:feature:Sensor:IFGI:ifgi-sensor-3</procedure>
+	<time>
+		<ogc:TM_During>
+			<ogc:PropertyName>om:samplingTime</ogc:PropertyName>
+			<gml:TimePeriod>
+				<gml:beginPosition>2008-03-01T17:44:15+00</gml:beginPosition>
+				<gml:endPosition>2008-05-01T17:50:15+00</gml:endPosition>
+			</gml:TimePeriod>
+		</ogc:TM_During>
+	</time>
+</DescribeSensor>

@@ -1,0 +1,27 @@
+#opciones {
+	Z-INDEX: 7000; POSITION: fixed; PADDING-BOTTOM: 10px; PADDING-LEFT: 10px; WIDTH: 800px; PADDING-RIGHT: 10px; FONT: 12px/140% Arial, Helvetica, sans-serif; BACKGROUND: #e7e7e7; COLOR: #999; BOTTOM: 0px; RIGHT: 0px; PADDING-TOP: 10px
+}
+#opciones H2 {
+	BORDER-BOTTOM: #fff 1px solid; PADDING-BOTTOM: 3px; MARGIN: 0px 0px 3px; PADDING-LEFT: 0px; PADDING-RIGHT: 0px; COLOR: #666; FONT-SIZE: 16px; PADDING-TOP: 0px
+}
+#opciones H3 {
+	PADDING-BOTTOM: 0px; TEXT-INDENT: 0px; MARGIN: 3px 0px; PADDING-LEFT: 0px; PADDING-RIGHT: 0px; HEIGHT: 15px; COLOR: #666666; PADDING-TOP: 0px
+}
+#opciones P {
+	FONT-SIZE: 12px
+}
+#opciones A {
+	COLOR: #999; TEXT-DECORATION: none
+}
+#opciones A:hover {
+	BACKGROUND: #666666; COLOR: #fff
+}
+#settings {
+	Z-INDEX: 8000; POSITION: fixed; TEXT-INDENT: -99999px; WIDTH: 430px; DISPLAY: block; BACKGROUND: url(../images/opciones.gif) no-repeat 0px 0px; HEIGHT: 43px; BOTTOM: 0px; CURSOR: pointer; LEFT: 0px
+}
+#settings:hover {
+	BACKGROUND: url(../images/opciones.gif) no-repeat 0px -86px
+}
+.cerrar {
+	BACKGROUND: url(../images/opciones.gif) no-repeat 0px -43px!important;
+}

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GetObservation xmlns="http://www.opengis.net/sos/1.0"
+	xmlns:ows="http://www.opengis.net/ows/1.1"
+	xmlns:gml="http://www.opengis.net/gml"
+	xmlns:ogc="http://www.opengis.net/ogc"
+	xmlns:om="http://www.opengis.net/om/1.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.opengis.net/sos/1.0
+	http://schemas.opengis.net/sos/1.0.0/sosGetObservation.xsd"
+	service="SOS" version="1.0.0">
+	
+	<offering>GAUGE_HEIGHT</offering>
+	<observedProperty>urn:ogc:def:phenomenon:OGC:1.0.30:waterlevel</observedProperty>
+	<observedProperty>urn:ogc:def:phenomenon:OGC:1.0.30:waterspeed</observedProperty>
+	
+	<featureOfInterest>
+		<ogc:Overlaps>
+			<ogc:PropertyName>urn:ogc:data:location</ogc:PropertyName>
+			<gml:Point srsName="urn:ogc:def:crs:EPSG::4326">
+				<gml:pos>52.90 7.52</gml:pos>
+			</gml:Point>
+		</ogc:Overlaps>
+	</featureOfInterest>
+	
+	<responseFormat>text/xml;subtype=&quot;om/1.0.0&quot;</responseFormat>
+
+</GetObservation>

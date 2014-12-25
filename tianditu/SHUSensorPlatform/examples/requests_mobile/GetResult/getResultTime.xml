@@ -1,0 +1,11 @@
+<sos:GetResult xmlns:sos="http://www.opengis.net/sos/1.0" xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc"  service="SOS" version="1.0.0">
+	<sos:ObservationTemplateId>ot_16</sos:ObservationTemplateId>
+	<sos:eventTime>
+		<ogc:TM_After>
+			<ogc:PropertyName>om:samplingTime</ogc:PropertyName>
+			<gml:TimeInstant>
+				<gml:timePosition>2005-08-05T12:02:13Z</gml:timePosition>
+			</gml:TimeInstant>
+		</ogc:TM_After>
+	</sos:eventTime>
+</sos:GetResult>
