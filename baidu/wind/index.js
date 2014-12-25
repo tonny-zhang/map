@@ -544,6 +544,7 @@ VectorField.split = function(vectorField,x0,y0,x1,y1){
 			// a  = 0.5,b = 0.5;
 			var x = a * this.x0 + (1 - a) * this.x1;
 			var y = b * this.y0 + (1 - b) * this.y1;
+			// x = 121.169744, y = 23.6069;
 			// return new Particle(x, y, 1 + 40 * Math.random());
 			if (this.field.maxLength == 0) {
 				return new Particle(x, y, 1 + 40 * Math.random());
@@ -648,7 +649,7 @@ VectorField.split = function(vectorField,x0,y0,x1,y1){
 
 	MotionDisplay.prototype.moveThings = function(animator) {
 		/*控制地图绽放对速度的影响,百度地图等级都是2的指数倍*/
-		var speed = .01 / (animator.zoom || 1);
+		var speed = .05 / (animator.zoom || 1);
 		// speed = 0.005;
 		for (var i = 0; i < this.particles.length; i++) {
 			var p = this.particles[i];
@@ -664,7 +665,7 @@ VectorField.split = function(vectorField,x0,y0,x1,y1){
 	};
 
 	var draw_img_dir = (function(){
-		var scale = 1;
+		var scale = 2;
 		var width = 6*scale,
 			height = 4*scale;
 		var canvas_pattern = document.createElement('canvas');
@@ -753,6 +754,9 @@ VectorField.split = function(vectorField,x0,y0,x1,y1){
 						angle = proj.x > p.oldX? 0: Math.PI;
 					}else{
 						angle = Math.atan((proj.y-p.oldY)/(proj.x-p.oldX));
+						if(proj.x < p.oldX){
+							angle += Math.PI;
+						}
 					}
 				}
 
@@ -767,6 +771,7 @@ VectorField.split = function(vectorField,x0,y0,x1,y1){
 				// g.lineTo(p.oldX, p.oldY);
 				// g.stroke();
 			}
+			console.log('cache',proj.x, proj.y);
 			p.oldX = proj.x;
 			p.oldY = proj.y;
 		}
@@ -902,8 +907,8 @@ VectorField.split = function(vectorField,x0,y0,x1,y1){
 
 	
 	var field = VectorField.read(windData, true),
-		render_delay = 100,
-		numParticles = 1000; // slowwwww browsers; 3500
+		render_delay = 40,
+		numParticles = 1000;//1000; // slowwwww browsers; 3500
 	var mapAnimator;
 	function initData(map){
 
@@ -922,6 +927,12 @@ VectorField.split = function(vectorField,x0,y0,x1,y1){
 			left: 0,
 			top: 0
 		}).appendTo($('#map .BMap_mask')).get(0);
+		var ctx = canvas.getContext('2d');
+
+	draw_img_dir(ctx,100,100,{
+		angle: -Math.PI/3,
+		color: 'green'
+	});
 		var imageCanvas = canvas;
 
 	    var map_projection = new BMapProjection(map);
