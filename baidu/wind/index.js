@@ -35,7 +35,7 @@
 					var point = new BMap.Point(p_v.x, p_v.y);
 					point_arr.push(point);
 				});
-				var polyline = new BMap.Polyline(point_arr, {strokeColor:"#1010FF", strokeWeight: v.weight||1, strokeOpacity:1});
+				var polyline = new BMap.Polyline(point_arr, {strokeColor:"red", strokeWeight: v.weight||1, strokeOpacity:0.5});
 				map.addOverlay(polyline);   //增加折线
 			}
 			var flags = v.flags;
@@ -65,7 +65,6 @@
 		var symbols = data.symbols;
 		$.each(symbols,function(i,v){
 			var type = v.type;
-			console.log(type);
 			if(type == 3 || type == 4){
 				var marker = new BMap.Marker(new BMap.Point(v.x,v.y));
 				marker.addEventListener("click",function(){
@@ -173,7 +172,7 @@
 		this._div.style.top  = pixel.y + "px";
 	}
 
-	var NUM_SPAN_SYMBOL = 6,
+	var NUM_SPAN_SYMBOL = 5,
 		NUM_SYMBOL_ENDPOINT = 5,
 		NUM_SYMBOL_OF_TWO_SYMBOL = 20;
 	function draw_line_symbols_flag(code,items,index){
@@ -211,8 +210,8 @@
 							y = max_y - Math.abs(dist * Math.sin(radiu));
 						}
 						items_span.push({
-							x: x,
-							y: y
+							x: x + dist* 0.35,
+							y: y + dist* 0.08
 						});
 					}else if(code == 3){
 						var middle_x = x2+(x1-x2)/2,
@@ -236,25 +235,16 @@
 						}
 						var arr = [];
 						
-						if(start_radiu > 0){
-							start_radiu = 180 + start_radiu;
-						}
-						var len = 180-start_radiu;
-						// console.log(index,'start_radiu',start_radiu,len);
-						// if(index == 0){
-						// 	continue;
-						// }
 						var _index = 0;
-						for(var i = -start_radiu;i<len;i++){
-							var radiu = i * Math.PI/180;
+						for(var i = 0;i<180;i++){
+							var radiu = -(i+start_radiu) * Math.PI/180;
 							// console.log(_index++,index,i,len,radiu);
 							var cha_x = r * Math.cos(radiu);
 							var x =  middle_x + cha_x;
 							var y = middle_y - r * Math.sin(radiu);
-							// console.log(r,Math.sqrt(Math.pow(x-middle_x,2)+Math.pow(y-middle_y,2)));
 							arr.push({
-								x: x,
-								y: y
+								x: middle_x + (x - middle_x)* (i%179 != 0?0.995:1),
+								y: middle_y + (y - middle_y)* (i%179 != 0?0.6:1)
 							});
 						}
 						var circle_a = arr[0],
@@ -265,20 +255,11 @@
 							arr.reverse();
 						}
 						items_span = items_span.concat(arr);
-						// console.log(items_span);
 					}
 					// console.log(items_span.length);
 					$.each(items_span,function(i,v){
 						var point = new BMap.Point(v.x, v.y);
 						point_arr.push(point);
-						// setTimeout(function(){
-						// 	var marker = new BMap.Marker(point);
-						// 	marker.addEventListener("click",function(){
-						// 		var p = marker.getPosition();  //获取marker的位置
-						// 		alert(i+" marker的位置是" + p.lng + "," + p.lat);    
-						// 	});
-						// 	map.addOverlay(marker);
-						// },i*400);
 					});
 					var color = getLineColor(code);
 					var polygon = new BMap.Polygon(point_arr, {strokeColor: color, fillColor: color,fillOpacity: 1, strokeWeight: 1, strokeOpacity:1});
@@ -286,24 +267,6 @@
 					
 				}
 			}
-			
-			// var points = [];
-			// var i = 5;
-			// while(i < items.length){
-			// 	var one = items.slice(i,i+1);
-			// 	i+=10;
-			// 	var two = items.slice(i,i+1);
-			// 	i+= 30;
-			// 	if(one.length == 1 && two.length == 1){
-			// 		points.push([one,two]);
-			// 	}
-			// }
-			// $.each(points,function(i,v){
-			// 	var one = v[0][0],
-			// 		two = v[1][0];
-			// 	var radiu = Math.atan((two.y - one.y)/(two.x - one.x)) / Math.PI * 180;
-			// 	map.addOverlay(new Icon_Layer(new BMap.Point((two.x + one.x)/2,(two.y + one.y)/2),-radiu,code == 2?'cool':'warm'));
-			// });
 		}else if(code == 38){
 			var SPACE_NUM = 6;
 			var color = getLineColor(38);
@@ -337,7 +300,7 @@
 					var color = colors[i];
 					var condition = color[0];
 					if(val >= condition[0] && val < condition[1]){
-						var c = color[1];console.log(code,val,c);
+						var c = color[1];
 						if(code == 24){
 							c = 'url(#rain_snow_'+(index++)+')';
 						}
@@ -362,7 +325,7 @@
 	// var data_url = prefix_url + 'data/micaps/14/rrr112708.006.json';
 	// var data_url = prefix_url + 'data/micaps/14/kw14121808.024.json';
 	// var data_url = prefix_url + 'data/micaps/14/wt121808.024.json';
-	var data_url = prefix_url + 'data/micaps/14/14122508.000.json';
+	var data_url = prefix_url + 'data/micaps/14/14120608.000.json';
 	
 
 
@@ -436,6 +399,53 @@
 			callback_data.call(null,map,a[0]);
 		});
 
+	}
+}();
+!function(){
+	var geo_url = 'http://10.14.85.116/git_project/GeoMap/json/';
+
+	var map;
+	function addGeoPolygon(coordinates){
+		$.each(coordinates,function(i,v){
+			var points = [];
+			$.each(v,function(v_i,v_v){
+				points.push(new BMap.Point(v_v[0],v_v[1]));
+			});
+			var polygon = new BMap.Polygon(points,{
+				strokeColor: '#fff', 
+				fillColor: 'rgba(255,255,255,0.001)',
+				fillOpacity: 0.9, 
+				strokeWeight: 1, 
+				strokeOpacity:1
+			});
+			map.addOverlay(polygon);
+		});
+	}
+	var loadGeo = function(url){
+		$.getJSON(url,function(data){
+			$.each(data.features,function(i,v){
+				var type = v.type;
+				if('Feature' == type){
+					var geometry = v.geometry;
+					var type_geometry = geometry.type;
+
+					if('Polygon' == type_geometry ){
+						addGeoPolygon(geometry.coordinates);
+					}else if('MultiPolygon' == type_geometry){
+						$.each(geometry.coordinates,function(v_i,v_v){
+							addGeoPolygon(v_v);
+						});
+					}else{
+						console.log(v,type_geometry);
+					}
+				}
+			});
+		});
+	}
+	window.initGEO = function(_map){
+		map = _map;
+		loadGeo(geo_url+'world.geo.json');
+		loadGeo(geo_url+'china.geo.json');
 	}
 }();
 
@@ -946,7 +956,7 @@
 		this.y1 = this.field.y1; //corner coordinates
 		this.makeNewParticles(null, true); //randomly generate particles within map
 		this.colors = [];
-		this.rgb = '40, 40, 40'; //background color
+		this.rgb = '40, 40, 40'; //background color 40, 40, 40 28,28,130
 		this.background = 'rgb(' + this.rgb + ')';
 		this.backgroundAlpha = 'rgba(' + this.rgb + ', .02)';
 		this.outsideColor = '#fff';
@@ -1106,7 +1116,7 @@
 	};
 
 	var draw_img_dir = (function(){
-		var scale = 1;
+		var scale = 2;
 		var width = 6*scale,
 			height = 4*scale;
 		var canvas_pattern = document.createElement('canvas');
@@ -1156,16 +1166,22 @@
 		} else {
 			g.fillStyle = this.backgroundAlpha;
 		}
+		g.fillStyle = 'rgba(0, 0, 0, 0.9725490196078431)';
 		var dx = animator.dx;
 		var dy = animator.dy;
 		var scale = animator.scale;
 		var width = w * scale, 
 			height = h * scale;
-		g.clearRect(dx, dy, w * scale, h * scale);
-		// g.fillRect(dx, dy, width, height);
+		var prev = g.globalCompositeOperation;
+        g.globalCompositeOperation = "destination-in";
+
+        g.fillRect(dx, dy, width, height);
+        g.globalCompositeOperation = prev;
+		// g.clearRect(dx, dy, w * scale, h * scale);
+		
 		var proj = new Vector(0, 0);
 		var val = new Vector(0, 0);
-		g.lineWidth = 3;
+		g.lineWidth = 1;
 		for (var i = 0; i < this.particles.length; i++) {
 			var p = this.particles[i];
 			// p.x = 106.65410385127255;
@@ -1177,40 +1193,52 @@
 			this.projection.project(p.x, p.y, proj);
 			proj.x = proj.x * scale + dx;
 			proj.y = proj.y * scale + dy;
+			// 处理顶部出现横向运动带
+			if(p.oldY == proj.y && p.y >= this.field.y0){
+				p.age = -2;
+				continue;
+			}
 			if (proj.x < 0 || proj.y < 0 || proj.x > w || proj.y > h) {
 				p.age = -2;
 			}
+			
 			if (p.oldX != -1) { //not new
 				var wind = this.field.getValue(p.x, p.y, val);
 				var s = wind.length() / this.maxLength;
 
 				var t = Math.floor(290 * (1 - s)) - 45;
-
-				var cha_x = proj.x-p.oldX;
-				var angle = 0;
-				if(cha_x == 0){
-					angle = (proj.y > p.oldY? 1: -1)*Math.PI/2;
-				}else{
-					if(proj.y == p.oldY){
-						angle = proj.x > p.oldX? 0: Math.PI;
+				// if(t < 210){
+					var cha_x = proj.x-p.oldX;
+					var angle = 0;
+					if(cha_x == 0){
+						angle = (proj.y > p.oldY? 1: -1)*Math.PI/2;
 					}else{
-						angle = Math.atan((proj.y-p.oldY)/(proj.x-p.oldX));
-						if(proj.x < p.oldX){
-							angle += Math.PI;
+						if(proj.y == p.oldY){
+							angle = proj.x > p.oldX? 0: Math.PI;
+						}else{
+							angle = Math.atan((proj.y-p.oldY)/(proj.x-p.oldX));
+							if(proj.x < p.oldX){
+								angle += Math.PI;
+							}
 						}
 					}
-				}
 
-				draw_img_dir(g,p.oldX+(proj.x-p.oldX)/2,p.oldY+(proj.y-p.oldY)/2,{
-					angle: angle,
-					color: "hsl(" + t + ", 50%, 50%)"
-				});
-				// g.strokeStyle = "hsl(" + t + ", 50%, 50%)";
-				// // g.strokeStyle = 'rgba(0,'+t+',0,1)';
-				// g.beginPath();
-				// g.moveTo(proj.x, proj.y);
-				// g.lineTo(p.oldX, p.oldY);
-				// g.stroke();
+					// draw_img_dir(g,p.oldX+(proj.x-p.oldX)/2,p.oldY+(proj.y-p.oldY)/2,{
+					// 	angle: angle,
+					// 	color: "hsl(" + t + ", 50%, 50%)"
+					// });
+
+					var per = Math.min(Math.ceil(s * 255),100);
+					var _color = "hsl(" + t + ", "+per+"%, 50%)";
+					// var _color = 'rgb(0,'+Math.ceil(s * 255)+',0)';
+					// g.shadowColor = _color;
+					g.strokeStyle = _color;
+					// g.strokeStyle = 'rgba(0,'+t+',0,1)';
+					g.beginPath();
+					g.moveTo(proj.x, proj.y);
+					g.lineTo(p.oldX, p.oldY);
+					g.stroke();
+				// }
 			}
 			p.oldX = proj.x;
 			p.oldY = proj.y;
@@ -1348,7 +1376,7 @@
 	
 	var field = VectorField.read(windData, true),
 		render_delay = 40,
-		numParticles = 1000;//1000; // slowwwww browsers; 3500
+		numParticles = 3500;//1000; // slowwwww browsers; 3500
 	var mapAnimator;
 	function initData(map){
 
@@ -1391,22 +1419,25 @@
 			map_url = 'http://map.yuce.baidu.com/tile4/?qt=tile&udt=20141224';
 		tileLayer.getTilesUrl = function(t, e) {
 			var o = map_url + "&x=" + t.x + "&y=" + t.y + "&z=" + e + "&styles=pl";
-			return o
+			return o;//'data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWNgYGBgAAAABQABh6FO1AAAAABJRU5ErkJggg=='
 		};
 		var map_type = new BMap.MapType("线下测试", tileLayer);
 		var map = new BMap.Map("map", {
 			enable3DBuilding: !1,
 			vectorMapLevel: 99,
+			enableMapClick: false,
 			mapType: map_type
 		});
 
-		map.setMapStyle({
-			features: ["road", "building", "water", "land"],
-			style: "dark"
-		});
+		// map.setMapStyle({
+		// 	features: ["road", "building", "water", "land"],
+		// 	style: "rgb(40,40,40)"
+		// });
+		window.map = map;
 	    var currentZoom = 5;
 	    map.setMinZoom(4);
 	    map.setMaxZoom(9);
+	    map.disableInertialDragging();
 	    map.enableScrollWheelZoom();    //启用滚轮放大缩小，默认禁用
 	    map.enableContinuousZoom();    //启用地图惯性拖拽，默认禁用
 	    map.centerAndZoom(new BMap.Point(104.408836,34.899005), currentZoom);
@@ -1430,20 +1461,7 @@
 	    }
 	    
 	    initMicapsLine(map);
-		// initData(map);
-		// var legendAnimator = new Animator(null, isAnimating);
-		// var speedScaleFactor = 20 / 1.15;
-		// var legendSpeeds = [1, 3, 5, 10, 15, 30];
-		// for (var i = 1; i <= legendSpeeds.length; i++) {
-		// 	var c = document.getElementById('legend' + i);
-		// 	var legendField = VectorField.constant(
-		// 		legendSpeeds[i - 1] * speedScaleFactor, 0, 0, 0, c.width, c.height);
-		// 	var legend = new MotionDisplay(c, null, legendField, 30);
-		// 	// normalize so colors correspond to wind map's maximum length!
-		// 	legend.maxLength = field.maxLength * speedScaleFactor;
-		// 	legendAnimator.add(legend);
-		// }
-		// legendAnimator.start(40);
+	    // initGEO(map);
 	}
 	init();
 }();
