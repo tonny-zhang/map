@@ -1166,7 +1166,7 @@
 		} else {
 			g.fillStyle = this.backgroundAlpha;
 		}
-		g.fillStyle = 'rgba(0, 0, 0, 0.9725490196078431)';
+		g.fillStyle = 'rgba(0, 0, 0, 0.8)';
 		var dx = animator.dx;
 		var dy = animator.dy;
 		var scale = animator.scale;
@@ -1229,11 +1229,12 @@
 					// });
 
 					var per = Math.min(Math.ceil(s * 255),100);
-					var _color = "hsl(" + t + ", "+per+"%, 50%)";
+					var _color = "hsl(" + (t) + ", 50%, 50%)";
+					// var _color = "hsl(84, 228, "+(t*0.5)+")";
 					// var _color = 'rgb(0,'+Math.ceil(s * 255)+',0)';
 					// g.shadowColor = _color;
 					g.strokeStyle = _color;
-					// g.strokeStyle = 'rgba(0,'+t+',0,1)';
+					// g.strokeStyle = 'rgba(0, 0, '+(t)+',1)';
 					g.beginPath();
 					g.moveTo(proj.x, proj.y);
 					g.lineTo(p.oldX, p.oldY);

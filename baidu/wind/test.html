@@ -1,95 +1,288 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<title>用JS模拟太空流星的立体效果 酷站代码|www.5icool.org</title>
+	<title></title>
 </head>
-<body bgcolor=black>
+<body>
+	<script type="text/javascript" src="./data/world-14112008.000.js"></script>
 	<script language="JavaScript"> <!-- 
-	if (document.all) {
-	xL = 5;
-	xH = 0;
-	xW = 0;
-	xR = 0;
-	xE = 0;
-	xMY = 0;
-	xMX = 0;
-	xWd = 0;
-	xHd = 0;
-	xF = new Array();
-	xY = new Array();
-	xX = new Array();
-	xS = new Array();
-	xA = new Array();
-	xB = new Array();
-	ini = new Array();
-	cl = new Array('#fff000', '#0000FF', '#ff0000', '#00ff00', '#ff00ff', '#ffa500') 
-	document.write('<div id="xouter" style="position:absolute;top:0px;left:0px"><div style="position:relative">');
-	for (i = 0; i < xL; i++) {
-		document.write('<div id="xie" style="position:absolute;top:0;left:0;width:10px;height:10px;' + 'font-family:Courier New;font-size:50px;color:#ffffff">.</div>');
-	}
-	document.write('</div></div>'); //Initial Placement! 
-	function Set() {
-		for (i = 0; i < xL; i++) {
-			xH = window.document.body.offsetHeight;
-			xW = window.document.body.offsetWidth;
-			xA[i] = Math.round(Math.random() * xH);
-			xB[i] = Math.round(Math.random() * xW);
-			xS[i] = Math.random() * 0.07 + 0.05;
-			xR = Math.round(Math.random() * 3);
-			xE = Math.round(Math.random() * 2500 + 50) 
-			if (xR == 3) xB[i] = -xE;
-			if (xR == 2) xB[i] = xW + xE;
-			if (xR == 1) xA[i] = -xE;
-			if (xR == 0) xA[i] = xH;
-			xF[i] = xW / 14;
+	!function(){
+		/* 流场相关 { */
+		var Vector = function(x, y) {
+			this.x = x;
+			this.y = y;
 		}
-	}
-	Set();
 
-	function Assign() {
-		xouter.style.top = document.body.scrollTop;
-		for (i = 0; i < xL; i++) {
-			xF[i] -= xS[i] * 25;
-			if (xF[i] < 4) xF[i] = 3;
-			xie[i].style.top = xY[i];
-			xie[i].style.left = xX[i];
-			xie[i].style.fontSize = xF[i];
-			xie[i].style.filter = 'glow(color=' + ini[i] + ', strength=' + xF[i] / 3 + ')';
-		}
-	}
 
-	function fly() {
-		var N = Math.floor(Math.random() * cl.length) 
-		xMY = window.document.body.clientHeight / 2;
-		xMX = window.document.body.clientWidth / 2;
-		xWd = Math.round(Math.random() * 40 + 5);
-		xHd = Math.round(Math.random() * 30 + 5);
-		for (i = 0; i < xL; i++) {
-			xY[i] = xA[i] += (xMY - xA[i]) * (xS[i]);
-			xX[i] = xB[i] += (xMX - xB[i]) * (xS[i]);
-			if ((xX[i] > xMX - xWd) && (xX[i] < xMX + xWd) && (xY[i] > xMY - xHd) && (xY[i] < xMY + xHd)) {
-				xH = window.document.body.offsetHeight;
-				xW = window.document.body.offsetWidth;
-				xA[i] = Math.round(Math.random() * xH);
-				xB[i] = Math.round(Math.random() * xW);
-				xS[i] = Math.random() * 0.05 + 0.05;
-				xR = Math.round(Math.random() * 3);
-				xE = Math.round(Math.random() * 50 + 50) 
-				if (xR == 3) xB[i] = -xE;
-				if (xR == 2) xB[i] = xW + xE;
-				if (xR == 1) xA[i] = -xE;
-				if (xR == 0) xA[i] = xH + xE;
+		Vector.polar = function(r, theta) {
+			return new Vector(r * Math.cos(theta), r * Math.sin(theta));
+		};
+
+
+		Vector.prototype.length = function() {
+			return Math.sqrt(this.x * this.x + this.y * this.y);
+		};
+
+
+		Vector.prototype.copy = function() {
+			return new Vector(this.x, this.y);
+		};
+
+
+		Vector.prototype.setLength = function(length) {
+			var current = this.length();
+			if (current) {
+				var scale = length / current;
+				this.x *= scale;
+				this.y *= scale;
 			}
-			if ((xX[i] < 0) || (xX[i] > xW) || (xY[i] < 0) || (xY[i] > xH)) {
-				xF[i] = xW / 14;
-				ini[i] = cl[N];
+			return this;
+		};
+
+
+		Vector.prototype.setAngle = function(theta) {
+			var r = length();
+			this.x = r * Math.cos(theta);
+			this.y = r * Math.sin(theta);
+			return this;
+		};
+
+
+		Vector.prototype.getAngle = function() {
+			return Math.atan2(this.y, this.x);
+		};
+
+
+		Vector.prototype.d = function(v) {
+			var dx = v.x - this.x;
+			var dy = v.y - this.y;
+			return Math.sqrt(dx * dx + dy * dy);
+		};
+		/**
+		 * Represents a vector field based on an array of data,
+		 * with specified grid coordinates, using bilinear interpolation
+		 * for values that don't lie on grid points.
+		 */
+
+		/**
+		 *
+		 * @param field 2D array of Vectors
+		 *
+		 * next params are corners of region.
+		 * @param x0
+		 * @param y0
+		 * @param x1
+		 * @param y1
+		 */
+		var VectorField = function(field, x0, y0, x1, y1) {
+			this.x0 = x0;
+			this.x1 = x1;
+			this.y0 = y0;
+			this.y1 = y1;
+			this.field = field;
+			this.w = field.length;
+			this.h = field[0].length;
+			this.maxLength = 0;
+			for (var i = 0; i < this.w; i++) {
+				for (var j = 0; j < this.h; j++) {
+
+					this.maxLength = Math.max(this.maxLength, field[i][j].length());
+				}
 			}
+		};
+
+		/**
+		 * Reads data from raw object in form:
+		 * {
+		 *   x0: -126.292942,
+		 *   y0: 23.525552,
+		 *   x1: -66.922962,
+		 *   y1: 49.397231,
+		 *   gridWidth: 501.0,
+		 *   gridHeight: 219.0,
+		 *   field: [
+		 *     0,0,
+		 *     0,0,
+		 *     ... (list of vectors)
+		 *   ]
+		 * }
+		 *
+		 * If the correctForSphere flag is set, we correct for the
+		 * distortions introduced by an equirectangular projection.
+		 */
+		VectorField.read = function(data, correctForSphere) {
+			var field = [];
+			var w = data.gridWidth; //width
+			var h = data.gridHeight; //height
+			var n = 2 * w * h; //2*area
+			var i = 0;
+			// OK, "total" and "weight"
+			// are kludges that you should totally ignore,
+			// unless you are interested in the average
+			// vector length on vector field over lat/lon domain.
+			var total = 0;
+			var weight = 0;
+			for (var x = 0; x < w; x++) {
+				field[x] = [];
+				for (var y = 0; y < h; y++) {
+					//reads in x/y data for each point, left->right, top->bottom
+					var vx = data.field[i++];
+					var vy = data.field[i++];
+					var v = new Vector(vx, vy);
+					// Uncomment to test a constant field:
+					// v = new Vector(10, 0);
+					if (correctForSphere) {
+						var ux = x / (w - 1);
+						var uy = y / (h - 1);
+						var lon = data.x0 * (1 - ux) + data.x1 * ux;
+						var lat = data.y0 * (1 - uy) + data.y1 * uy;
+						var m = Math.PI * lat / 180;
+						var length = v.length();
+						if (length) {
+							total += length * m;
+							weight += m;
+						}
+						v.x /= Math.cos(m);
+						v.setLength(length);
+					}
+					field[x][y] = v;
+				}
+			}
+			var result = new VectorField(field, data.x0, data.y0, data.x1, data.y1);
+			// window.console.log('total = ' + total);
+			// window.console.log('weight = ' + weight);
+			if (total && weight) {
+
+				result.averageLength = total / weight;
+			}
+			// console.log(result);
+			return result;
+		};
+		VectorField.split = function(vectorField,x0,y0,x1,y1){
+			var w = vectorField.w,
+				h = vectorField.h,
+				x_old = vectorField.x0,
+				y_old = vectorField.y0,
+				per_x = (vectorField.x1 - x_old)/w,
+				per_y = (vectorField.y1 - y_old)/h;
+
+			var new_field = [];
+			var i_x0 = i_x1 = i_y0 = i_y1 = -1;
+			var field = vectorField.field;
+			for(var i = 0,j = field.length;i<j;i++){
+				var new_x = x_old + per_x * (i-1);
+				if(new_x >= x0 && new_x <= x1){
+					if(i_x0 == -1){
+						i_x0 = i;
+					}else{
+						i_x1 = i;
+					}
+					for(var i_inner = 0,v_inner = field[i],j_inner = v_inner.length;i_inner< j_inner;i_inner++){
+						var new_y = y_old + per_y * (i_inner-1);
+						if(new_y >= y1 && new_y <= y0){
+							if(i_y0 == -1){
+								i_y0 = i_inner;
+							}else{
+								i_y1 = i_inner;
+							}
+						}
+					}
+				}
+			}
+			i_x0 -= 3;
+			i_x1 += 3;
+			i_y0 -= 3;
+			i_y1 += 3;
+			var MIN_X = 10,MIN_Y = 7;
+			var cha_i = i_x1 - i_x0;
+			if(cha_i < MIN_X){
+				cha_i = Math.ceil((MIN_X - cha_i)/2);
+				i_x0 = Math.max(0,i_x0-cha_i);
+				i_x1 = Math.min(i_x1+cha_i,w-1);
+			}
+			var cha_j = i_y1 - i_y0;
+			if(cha_j < MIN_Y){
+				cha_j = Math.ceil((MIN_Y - cha_j)/2);
+				i_y0 = Math.max(0,i_y0-cha_j);
+				i_y1 = Math.min(i_y1+cha_j,h-1);
+			}
+			i_x0 = Math.max(0,i_x0);
+			i_x1 = Math.min(i_x1,w-1);
+			i_y0 = Math.max(0,i_y0);
+			i_y1 = Math.min(i_y1,h-1);
+
+			new_x0 = x_old + i_x0 * per_x;
+			new_x1 = x_old + i_x1 * per_x;
+			new_y0 = y_old + i_y0 * per_y;
+			new_y1 = y_old + i_y1 * per_y;
+
+			for(var i = i_x0;i<i_x1;i++){
+				var field_colum = [];
+				for(var j = i_y0;j<i_y1;j++){
+					field_colum.push(field[i][j]);
+				}
+				new_field.push(field_colum);
+			}
+
+			var newVectorField = new VectorField(new_field,new_x0,new_y0,new_x1,new_y1);
+			/*保证计算颜色时基本保持一致*/
+			newVectorField.maxLength = vectorField.maxLength;
+			return newVectorField;
 		}
-		Assign();
-		setTimeout('fly()', 10);
-	}
-	fly();
-}</script>
-	<br />
-	<a href="http://www.5icool.org/">酷站代码</a>
+
+		VectorField.prototype.inBounds = function(x, y) {
+			return x >= this.x0 && x < this.x1 && y >= this.y0 && y < this.y1;
+		};
+
+
+		VectorField.prototype.bilinear = function(coord, a, b) {
+			var na = Math.floor(a);
+			var nb = Math.floor(b);
+			var ma = Math.ceil(a);
+			var mb = Math.ceil(b);
+			var fa = a - na;
+			var fb = b - nb;
+
+			return this.field[na][nb][coord] * (1 - fa) * (1 - fb) +
+				this.field[ma][nb][coord] * fa * (1 - fb) +
+				this.field[na][mb][coord] * (1 - fa) * fb +
+				this.field[ma][mb][coord] * fa * fb;
+		};
+
+
+		VectorField.prototype.getValue = function(x, y, opt_result) {
+			var a = (this.w - 1 - 1e-6) * (x - this.x0) / (this.x1 - this.x0);
+			var b = (this.h - 1 - 1e-6) * (y - this.y0) / (this.y1 - this.y0);
+			var vx = this.bilinear('x', a, b);
+			var vy = this.bilinear('y', a, b);
+			if (opt_result) {
+				opt_result.x = vx;
+				opt_result.y = vy;
+				return opt_result;
+			}
+			return new Vector(vx, vy);
+		};
+
+
+		VectorField.prototype.vectValue = function(vector) {
+			return this.getValue(vector.x, vector.y);
+		};
+
+
+		VectorField.constant = function(dx, dy, x0, y0, x1, y1) {
+			var field = new VectorField([
+				[]
+			], x0, y0, x1, y1);
+			field.maxLength = Math.sqrt(dx * dx + dy * dy);
+			field.getValue = function() {
+				return new Vector(dx, dy);
+			}
+			return field;
+		}
+
+		var field = VectorField.read(windData, true);
+
+		console.log(field.getValue(-178.875,-90));
+	}();
+	</script>
 </body>
 </html>
