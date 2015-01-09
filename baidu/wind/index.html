@@ -39,26 +39,17 @@
 			-moz-border-radius: 4px;
 		  	border-radius: 4px;
 		}
-		#legend{
-			position: absolute;
-			z-index: 1001;
-			left: 10px;
-			top: 40%;
-			display: none;
-		}
-		/*#map img{
-			opacity: 0.1;
-		}*/
 		#chart_container{
 			position: absolute;
 			left: 50%;
 			top: 50%;
-			width: 400px;
-			height: 300px;
-			/*margin-left: -200px;
-			margin-top: -150px;*/
+			width: 820px;
+			height: 500px;
+			padding: 20px;
+			margin-left: -415px;
+			margin-top: -235px;
 			z-index: 101;
-			background-color: rgba(0,0,0,0.3);
+			background-color: rgba(0,0,0,0.7);
 			border-radius: 3px;
 			display: none;
 
@@ -82,6 +73,18 @@
 			-o-backface-visibility: hidden;
 			backface-visibility: hidden;
 		}
+		/*#chart_container:before{
+			content: '';
+			position: absolute;
+			left: -6px;
+			top: -6px;
+			border: 4px solid rgba(0,0,0,0.7);
+			border-right: none;
+			border-bottom: none;
+			border-radius: 3px 0 0 0;
+			width: 20px;
+			height: 20px;
+		}*/
 		.show_air{
 			-webkit-transform: rotateY(180deg) translateX(100%);
 			-webkit-transform: rotateY(180deg) translateX(100%);
@@ -96,29 +99,31 @@
 			transform: perspective(600px) rotateY(180deg) translateX(100%);*/
 		}
 		#chart{
-			width: 400px;
-			height: 300px;
+			/*width: 400px;
+			height: 300px;*/
+			width: 820px;
+			height: 430px;
+			position: relative;
+		}
+		#chart:before{
+			content: '风速（m/s）';
+			position: absolute;
+			left: 10px;
+			top: 10px;
+			color: white;
 		}
 		.btn_close,
 		.btn_close_nodata{
-			border: 1px solid #ccc;
-			border-radius: 3px;
 			position: absolute;
-			right: 2px;
-			top: 2px;
-			color: #333;
-			width: 16px;
-			height: 16px;
-			line-height: 12px;
-			text-align: center;
+			right: 25px;
+			top: 25px;
+			width: 40px;
+			height: 40px;
 			cursor: pointer;
 			z-index: 11;
-			font-size: 14px;
+			background: url(img/img.png) no-repeat -252px -39px;
 		}
-		.btn_close_nodata:hover,
-		.btn_close:hover{
-			background-color: #ccc;
-		}
+		
 		.btn_bottom{
 			position: absolute;
 			bottom: 10px;
@@ -132,26 +137,26 @@
 			color: white;
 			text-decoration: none;
 		}
-		.module{
+		.module_container{
 			width: 100%;
-			height: 100%;
-			position: absolute;
-			left: 0;
-			top: 0;
-			z-index: 1;
-			background-color: white;
-			border-radius: 5px;
+			height: 400px;
+			overflow: hidden;
+			margin-top: 10px;
 		}
-		.air{
-			-webkit-transform: rotateY(180deg);
-			z-index: 0;
-
-			-webkit-transition: z-index .7s ease 0.7;
-			-moz-transition: z-index .7s ease 0.7;
-			-o-transition: z-index .7s ease 0.7;
-			transition: z-index .7s ease 0.7;
-			text-align: center;
-			background-color: #215968;
+		.module_move{
+			width: 300%;
+			overflow: hidden;
+		}
+		.module{
+			width: 33.33%;
+			height: 100%;
+			float: left;
+		}
+		.animate{
+			-webkit-transition: all .3s ease;
+			-moz-transition: all .3s ease;
+			-o-transition: all .3s ease;
+			transition: all .3s ease;
 		}
 		.show_air .air{
 			z-index: 2;
@@ -160,25 +165,42 @@
 			color: #E36A0C;
 		}
 		.air ul{
-			margin-top: 50px;
+			overflow: hidden;
 		}
 		.air li{
 			float: left;
 			display: inline;
 			width: 33.33%;
-			color: white;
 			font-weight: bold;
 			font-size: 20px;
+			height: 24px;
+			line-height: 24px;
+			text-align: center;
 		}
-		.air li span{
-			display: block;
-			width: 30px;
-			height: 60px;
-			background-color: red;
-			margin: 10px auto;
-		}
-		.air .btn_close{
+		.desc_air{
 			color: white;
+			height: 40px;
+			line-height: 40px;
+			text-indent: 20px;
+			background-color: rgba(255, 255, 255, 0.3);
+			position: relative;
+			top: -4px;
+			z-index: -1;
+		}
+		.day{
+			background-color: white;
+			border-radius: 0 0 5px 5px;
+			color: #000;
+			padding-top: 40px;
+		}
+		.day li{
+			font-size: 54px;
+			height: 94px;
+			line-height: 50px;
+		}
+		.day li span{
+			font-size: 18px;
+			display: block;
 		}
 		.loading{
 			width: 100%;
@@ -187,23 +209,13 @@
 			left: 0;
 			top: 0;
 			z-index: 10;
-			color: #333;
+			color: white;
 			font-size: 30px;
 			text-align: center;
 			line-height: 300px;
 			background-color: white;
 			border-radius: 5px;
-		}
-		.no_data{
-			line-height: 300px;
-			color: #333;
-			font-size: 30px;
-			text-align: center;
-			display: none;
-			z-index: 102;
-		}
-		.no_data_container .no_data{
-			display: block;
+			color: #000;
 		}
 		#loading_windspeed{
 			width: 400px;
@@ -221,56 +233,164 @@
 		.arrow{
 			font-size: 0;
 			position: absolute;
-			top: 10px;
+			top: 0;
 			left: -7px;
 			width: 0;
 			height: 0;
-			border-top: 8px solid transparent;
-			border-right: 8px solid white;
-			border-bottom: 8px solid transparent;
+			border: 26px solid transparent;
+			border-top: 26px solid #5C6475;
 			_border-top-color: tomato;
 			_border-bottom-color: tomato;
 			_-webkit-filter: chroma(color=tomato);
 			_filter: chroma(color=tomato);
 		}
-		.air .arrow{
-			border-right: 8px solid #215968;;
+		.air .legend{
+			height: 32px;
+			position: relative;
+			overflow: visible;
+		}
+		.legend li{
+			height: 24px;
+			line-height: 24px;
+			width: 16.66%;
+			text-align: center;
+			margin-top:4px;
+		}
+		.legend li.on{
+			height: 32px;
+			line-height: 32px;
+			margin-top: 0;
+		}
+		.legend .arrowli{
+			width: 34px;
+			height: 40px;
+			background: url(img/img.png) no-repeat -254px -107px;
+			position: absolute;
+			top: -38px;
+		}
+		.nav{
+			overflow: hidden;
+			text-align: center;
+			margin-top: 50px;
+		}
+		.nav h3{
+			display: inline-block;
+			font-size: 24px;
+			height: 30px;
+			line-height: 30px;
+			color: #aaa;
+			margin: 0;
+			font-weight: normal;
+		}
+		.nav h3.on{
+			font-size: 30px;
+			color: white;
+			font-weight: bold;
+		}
+		.nav h3.first{
+			text-align: right;
+		}
+		.nav span{
+			display: inline-block;
+			margin: 0 5px;
+			height: 30px;
+			line-height: 30px;
+			color: white;
+			font-size: 30px;
 		}
 
-		.show_air .arrow{
+		.loading{
 			display: none;
 		}
-		.show_air .air .arrow{
-			display: block;
+		.data_loading,
+		.no_data{
+			position: relative;
+			overflow: hidden;
 		}
+		.data_loading:after,
+		.no_data:after{
+			content: '正在加载数据...';
+			color: white;
+			width: 300px;
+			font-size: 30px;
+			text-align: center;
+			position: absolute;
+			left: 50%;
+			top: 40%;
+			margin-left: -150px;
+		}
+		.data_loading .c,
+		.no_data .c{
+			position: relative;
+			left: -2000px;
+		}
+		.no_data:after{
+			content: '暂时没有该地区数据';
+		}
+		.icon{
+			width: 160px;
+			height: 156px;
+			background-image: url(img/img.png);
+			background-repeat: no-repeat;
+			margin: 20px auto;
+			background-position: -20px 0;
+		}
+		.icon_1{
+			background-position: -20px 0;
+		}
+		.icon_2{
+			background-position: -20px -156px;
+		}
+		.icon_3{
+			background-position: -20px -321px;
+		}
+		.icon_4{
+			background-position: -20px -477px;
+		}
+		.icon_5{
+			background-position: -20px -637px;
+		}
+		.icon_6{
+			background-position: -20px -796px;
+		}
+		.day_c{
+			position: relative;
+			top: -4px;
+		}
+
 	  	</style>
 	</head>
 	<body>
 		<div class="loading" id="loading_windspeed">正在拼命加载数据...</div>
-		<div id="chart_container" class="no_data_container">
-			<div class="module">
-				<div class="loading" id="loading_wind">loading...</div>
-				<div class="arrow"></div>
-				<div id="chart">
+		<div id="chart_container">
+			<a class="btn_close"></a>
+			<div class="nav">
+				<h3 class="first on">未来24小时风速预报</h3>
+				<span>|</span>
+				<h3 class="second">未来三天空气污染气象条件</h3>
+			</div>
+			<div class="module_container">
+				<div class="module_move">
+					<div class="module wind_chart">
+						<div id="chart" class="c">
+						</div>
+					</div>
+					<div class="module air">
+						<div class="c">
+							<div class="icon"></div>
+							<ul class="legend"></ul>
+							<div class="desc_air"></div>
+							<div class="day_c">
+								<div class="arrow animate"></div>
+								<ul class="day">
+									<li>今天<br/><span>01-06</span></li>
+									<li>明天<br/><span>01-06</span></li>
+									<li>后天<br/><span>01-06</span></li>
+								</ul>
+							</div>
+						</div>
+					</div>
 				</div>
-				<a id="btn_air" class="btn_bottom" href="javascript:;">查看未来三天空气质量 &gt;</a>
-				<a class="btn_close">x</a>
-			</div>
-			<div class="module air">
-				<div class="loading" id="loading_air">loading...</div>
-				<div class="arrow"></div>
-				<h3>未来三天空气污染气象条件预报</h3>
-				<ul>
-					<li>周一<br/><span></span>差</li>
-					<li>周二<br/><span></span>一般</li>
-					<li>周三<br/><span></span>好</li>
-				</ul>
-				<a id="btn_back" class="btn_bottom" href="javascript:;">&lt; 返回</a>
-				<a class="btn_close">x</a>
-			</div>
-			<div class="module no_data">
-				<span>暂时没有该地区数据！</span>
-				<a class="btn_close">x</a>
 			</div>
 		</div>
 		

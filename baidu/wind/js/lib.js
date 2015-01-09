@@ -936,22 +936,30 @@
 		}
 	};
 
+	var AGE_RANDOM = 100;
+	function _rand(){
+		return (Math.random());
+	}
 	//makes random particle within bounds of canvas
 	MotionDisplay.prototype.makeParticle = function(animator) {
 		var dx = animator ? animator.dx : 0; //speed?
 		var dy = animator ? animator.dy : 0; //speed?
 		var scale = animator ? animator.scale : 1; //scale of orig graph
 		for (;;) { //infinite loop
-
+			// 148.488759 41.23353
+			// 150.696435 39.374402
 			var a = Math.random(); //0-1
 			var b = Math.random(); //0-1
 			// a  = 0.5,b = 0.5;
 			var x = a * this.x0 + (1 - a) * this.x1;
 			var y = b * this.y0 + (1 - b) * this.y1;
+			// var x = a * 150.696435 + (1 - a) * 142.488759;
+			// var y = b * 39.374402 + (1 - b) * 41.23353;
 			// x = 121.169744, y = 23.6069;
+			// x = 146.060316 , y = 40.394867;
 			// return new Particle(x, y, 1 + 40 * Math.random());
 			if (this.field.maxLength == 0) {
-				return new Particle(x, y, 1 + 40 * Math.random());
+				return new Particle(x, y, 1 + AGE_RANDOM * Math.random());
 			}
 			var v = this.field.getValue(x, y); //vector form
 			var m = v.length() / this.field.maxLength; //magnitude
@@ -963,7 +971,7 @@
 				var sx = proj.x * scale + dx;
 				var sy = proj.y * scale + dy;
 				if (!(sx < 0 || sy < 0 || sx > this.canvas.width || sy > this.canvas.height)) { //dimension check
-					return new Particle(x, y, 1 + 40 * Math.random());
+					return new Particle(x, y, 1 + AGE_RANDOM * Math.random());
 				}
 			}
 		}
@@ -1053,7 +1061,7 @@
 
 	MotionDisplay.prototype.moveThings = function(animator) {
 		/*控制地图绽放对速度的影响,百度地图等级都是2的指数倍*/
-		var speed = .05 / (animator.zoom || 1);
+		var speed = .03 / (animator.zoom || 1);
 		// speed = 0.005;
 		for (var i = 0; i < this.particles.length; i++) {
 			var p = this.particles[i];
@@ -1119,7 +1127,7 @@
 		} else {
 			g.fillStyle = this.backgroundAlpha;
 		}
-		g.fillStyle = 'rgba(0, 0, 0, 0.8)';
+		g.fillStyle = 'rgba(40, 40, 40, 0.99)';
 		var dx = animator.dx;
 		var dy = animator.dy;
 		var scale = animator.scale;
@@ -1134,7 +1142,7 @@
 		
 		var proj = new Vector(0, 0);
 		var val = new Vector(0, 0);
-		g.lineWidth = 1;
+		g.lineWidth = 1.2;
 		for (var i = 0; i < this.particles.length; i++) {
 			var p = this.particles[i];
 			// p.x = 106.65410385127255;
@@ -1146,11 +1154,12 @@
 			this.projection.project(p.x, p.y, proj);
 			proj.x = proj.x * scale + dx;
 			proj.y = proj.y * scale + dy;
-			// 处理顶部出现横向运动带
-			if(p.oldY == proj.y && p.y >= this.field.y0){
-				p.age = -2;
-				continue;
-			}
+			// !! 这里会出现不连续现象，后续修复!!
+			// // 处理顶部出现横向运动带
+			// if(p.oldY == proj.y && p.y >= this.field.y0){
+			// 	p.age = -2;
+			// 	continue;
+			// }
 			if (proj.x < 0 || proj.y < 0 || proj.x > w || proj.y > h) {
 				p.age = -2;
 			}
@@ -1161,27 +1170,27 @@
 
 				var t = Math.floor(290 * (1 - s)) - 45;
 				// if(t < 210){
-					var cha_x = proj.x-p.oldX;
-					var angle = 0;
-					if(cha_x == 0){
-						angle = (proj.y > p.oldY? 1: -1)*Math.PI/2;
-					}else{
-						if(proj.y == p.oldY){
-							angle = proj.x > p.oldX? 0: Math.PI;
-						}else{
-							angle = Math.atan((proj.y-p.oldY)/(proj.x-p.oldX));
-							if(proj.x < p.oldX){
-								angle += Math.PI;
-							}
-						}
-					}
+					// var cha_x = proj.x-p.oldX;
+					// var angle = 0;
+					// if(cha_x == 0){
+					// 	angle = (proj.y > p.oldY? 1: -1)*Math.PI/2;
+					// }else{
+					// 	if(proj.y == p.oldY){
+					// 		angle = proj.x > p.oldX? 0: Math.PI;
+					// 	}else{
+					// 		angle = Math.atan((proj.y-p.oldY)/(proj.x-p.oldX));
+					// 		if(proj.x < p.oldX){
+					// 			angle += Math.PI;
+					// 		}
+					// 	}
+					// }
 
 					// draw_img_dir(g,p.oldX+(proj.x-p.oldX)/2,p.oldY+(proj.y-p.oldY)/2,{
 					// 	angle: angle,
 					// 	color: "hsl(" + t + ", 50%, 50%)"
 					// });
 
-					var per = Math.min(Math.ceil(s * 255),100);
+					// var per = Math.min(Math.ceil(s * 255),100);
 					// t = 200;
 					var _color = "hsl(" + (t) + ", 70%, 50%)";
 					// var _color = "hsl(84, 228, "+(t*0.5)+")";
@@ -1199,6 +1208,7 @@
 			p.oldY = proj.y;
 		}
 	};
+
 
 	// please don't hate on this code too much.
 	// it's late and i'm tired.
@@ -1331,7 +1341,7 @@
 	
 	var field,// = VectorField.read(windData, true),
 		render_delay = 40,
-		numParticles = 4000;//1000; // slowwwww browsers; 3500
+		numParticles = 5000; // slowwwww browsers; 3500
 	var mapAnimator;
 	function initData(map){
 		if(!field){
@@ -1505,17 +1515,19 @@
 			
 			var date = new Date();
 			var url = url_format.apply(null, args);
-			console.log(url);
 			var $ajax = $.ajax({
 				url: url,
 				dataType: 'jsonp',
 				jsonp: '_cb',
 				success: function(data){
-					console.log(data, $ajax.date != ajax_date);
+					// console.log(data, $ajax.date != ajax_date);
 					if($ajax.date != ajax_date){
 						return;
 					}
 					callback && callback(data);
+				},
+				error: function(e){
+					console.log(arguments);
 				}
 			});
 			$ajax.date = ajax_date = date;
@@ -1537,7 +1549,8 @@
 		}
 	})();
 	global.loadWindSpeed = _getAjax(function(lon, lat, callback){
-		return 'http://10.14.85.116/php/wind/data.php?_name=historywindspeed&lon='+lon+'&lat='+lat;
+		// return 'http://10.14.85.116/php/wind/data.php?_name=historywindspeed&lon='+lon+'&lat='+lat;
+		return 'http://10.14.85.116/php/wind/data.php?_name=micapswind&type=1000&lon='+lon+'&lat='+lat;
 	});
 	global.loadAir = _getAjax(function(lon, lat, callback){
 		return 'http://10.14.85.116/php/wind/data.php?_name=micapsvalue&lon='+lon+'&lat='+lat+'&vti=024,048,072&type=zhyb';
