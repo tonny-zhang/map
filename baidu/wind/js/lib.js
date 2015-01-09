@@ -1366,11 +1366,12 @@
 		var ctx = canvas.getContext('2d');
 
 		var new_field = VectorField.split(field,sw_point.lng,ne_point.lat,ne_point.lng,sw_point.lat);
+		var map_projection = new BMapProjection(map);
 
-		_createMask(width, height);
+		_createMask(width, height, new_field, map_projection);
 
 		var imageCanvas = canvas;
-	    var map_projection = new BMapProjection(map);
+	    
 	    var scale = Math.pow(2,map.getZoom() - 4);
 	    
 	    var display = new MotionDisplay(canvas, imageCanvas, new_field, numParticles, map_projection);
@@ -1382,15 +1383,188 @@
 
 		
 	}
-	function _createMask(width, height){
-		var canvas = $('<canvas width='+width+' height='+height+' class="layer_vector">').css({
-			left: 0,
-			top: 0
-		}).appendTo($('#map .BMap_mask')).get(0);
-		var ctx = canvas.getContext('2d');
+	var _createMask = (function(){
+		var TRANSPARENT_BLACK = [0, 0, 0, 0]; 		// singleton 0 rgba
+		var OVERLAY_ALPHA = Math.floor(0.4*255);  	// overlay transparency (on scale [0, 255])
+		var data, _width, _height, _grid;
+		var _isVisible = function(x, y) {
+            var i = (y * _width + x) * 4;
+            return data[i + 3] > 0;  // non-zero alpha means pixel is visible
+        }
+        var _set = function(x, y, rgba){
+        	var i = (y * _width + x) * 4;
+            data[i    ] = rgba[0];
+            data[i + 1] = rgba[1];
+            data[i + 2] = rgba[2];
+            data[i + 3] = rgba[3];
+        }
+        function _bilinearInterpolateVector(x, y, g00, g10, g01, g11) {
+	        var rx = (1 - x);
+	        var ry = (1 - y);
+	        var a = rx * ry,  b = x * ry,  c = rx * y,  d = x * y;
+	        var u = g00[0] * a + g10[0] * b + g01[0] * c + g11[0] * d;
+	        var v = g00[1] * a + g10[1] * b + g01[1] * c + g11[1] * d;
+	        return [u, v, Math.sqrt(u * u + v * v)];
+	    }
+	    function _floorMod(a, n) {
+	        var f = a - n * Math.floor(a / n);
+	        // HACK: when a is extremely close to an n transition, f can be equal to n. This is bad because f must be
+	        //       within range [0, n). Check for this corner case. Example: a:=-1e-16, n:=10. What is the proper fix?
+	        return f === n ? 0 : f;
+	    }
+	    function _isValue(x) {
+	        return x !== null && x !== undefined;
+	    }
+	    var λ0, φ0, Δλ, Δφ;
+	    function _interpolate(λ, φ) {
+            var i = _floorMod(λ - λ0, 360) / Δλ;  // calculate longitude index in wrapped range [0, 360)
+            var j = (φ0 - φ) / Δφ;                 // calculate latitude index in direction +90 to -90
 
+            //         1      2           After converting λ and φ to fractional grid indexes i and j, we find the
+            //        fi  i   ci          four points "G" that enclose point (i, j). These points are at the four
+            //         | =1.4 |           corners specified by the floor and ceiling of i and j. For example, given
+            //      ---G--|---G--- fj 8   i = 1.4 and j = 8.3, the four surrounding grid points are (1, 8), (2, 8),
+            //    j ___|_ .   |           (1, 9) and (2, 9).
+            //  =8.3   |      |
+            //      ---G------G--- cj 9   Note that for wrapped grids, the first column is duplicated as the last
+            //         |      |           column, so the index ci can be used without taking a modulo.
 
-	}
+            var fi = Math.floor(i), ci = fi + 1;
+            var fj = Math.floor(j), cj = fj + 1;
+
+            var row;
+            if ((row = _grid[fj])) {
+                var g00 = row[fi];
+                var g10 = row[ci];
+                
+                if (_isValue(g00) && _isValue(g10) && (row = _grid[cj])) {
+                	g00 = [g00.x, g00.y];
+                	g10 = [g10.x, g10.y];
+                    var g01 = row[fi];
+                    var g11 = row[ci];
+                    if (_isValue(g01) && _isValue(g11)) {
+	                    g01 = [g01.x, g01.y];
+	                    g11 = [g11.x, g11.y];
+                        // All four points found, so interpolate the value.
+                        return _bilinearInterpolateVector(i - fi, j - fj, g00, g10, g01, g11);
+                    }
+                }
+            }
+            // console.log("cannot interpolate: " + λ + "," + φ + ": " + fi + " " + ci + " " + fj + " " + cj);
+            return null;
+        }
+        function _distortion(projection, λ, φ, x, y) {
+	        var hλ = λ < 0 ? H : -H;
+	        var hφ = φ < 0 ? H : -H;
+	        // var pλ = projection([λ + hλ, φ]);
+	        // var pφ = projection([λ, φ + hφ]);
+	        var pλ = projection.project(λ + hλ, φ);
+	        var pφ = projection.project(λ, φ + hφ);
+
+	        // Meridian scale factor (see Snyder, equation 4-3), where R = 1. This handles issue where length of 1° λ
+	        // changes depending on φ. Without this, there is a pinching effect at the poles.
+	        var k = Math.cos(φ / 360 * τ);
+
+	        return [
+	            (pλ[0] - x) / hλ / k,
+	            (pλ[1] - y) / hλ / k,
+	            (pφ[0] - x) / hφ,
+	            (pφ[1] - y) / hφ
+	        ];
+	    }
+        function _distort(projection, λ, φ, x, y, scale, wind) {
+	        var u = wind[0] * scale;
+	        var v = wind[1] * scale;
+	        var d = _distortion(projection, λ, φ, x, y);
+
+	        // Scale distortion vectors by u and v, then add.
+	        wind[0] = d[0] * u + d[2] * v;
+	        wind[1] = d[1] * u + d[3] * v;
+	        return wind;
+	    }
+
+	    var BOUNDARY = 0.45;
+	    var τ = 2 * Math.PI;
+    	var H = 0.0000360;  // 0.0000360°φ ~= 4m
+	    function _sinebowColor(hue, a) {
+	        // Map hue [0, 1] to radians [0, 5/6τ]. Don't allow a full rotation because that keeps hue == 0 and
+	        // hue == 1 from mapping to the same color.
+	        var rad = hue * τ * 5/6;
+	        rad *= 0.75;  // increase frequency to 2/3 cycle per rad
+
+	        var s = Math.sin(rad);
+	        var c = Math.cos(rad);
+	        var r = Math.floor(Math.max(0, -c) * 255);
+	        var g = Math.floor(Math.max(s, 0) * 255);
+	        var b = Math.floor(Math.max(c, 0, -s) * 255);
+	        return [r, g, b, a];
+	    }
+	    function _colorInterpolator(start, end) {
+	        var r = start[0], g = start[1], b = start[2];
+	        var Δr = end[0] - r, Δg = end[1] - g, Δb = end[2] - b;
+	        return function(i, a) {
+	            return [Math.floor(r + i * Δr), Math.floor(g + i * Δg), Math.floor(b + i * Δb), a];
+	        };
+	    }
+	    var _fadeToWhite = _colorInterpolator(_sinebowColor(1.0, 0), [255, 255, 255]);
+	    function _extendedSinebowColor(i, a) {
+	        return i <= BOUNDARY ?
+	            _sinebowColor(i / BOUNDARY, a) :
+	            _fadeToWhite((i - BOUNDARY) / (1 - BOUNDARY), a);
+	    }
+	    function _gradient(v, a){
+	    	return _extendedSinebowColor(Math.min(v, 100) / 100, a);
+	    }
+		return function(width, height, field, projection){
+			console.log(field);
+			_width = width;
+			_height = height;
+			_grid = field.field;
+			λ0 = field.x0, φ0 = field.y1;
+			Δλ = (field.x1 - λ0)/field.w, Δφ = (field.y1 - field.y0)/field.h;
+			var canvas = $('<canvas width='+width+' height='+height+' class="layer_vector">').css({
+				left: 0,
+				top: 0
+			}).appendTo($('#map .BMap_mask')).get(0);
+			var ctx = canvas.getContext('2d');
+			ctx.fillStyle = "rgba(255, 0, 0, 1)";
+	        ctx.fill();
+	        // d3.select("#display").node().appendChild(canvas);  // make mask visible for debugging
+
+	        var imageData = ctx.getImageData(0, 0, width, height);
+	        data = imageData.data;  // layout: [r, g, b, a, r, g, b, a, ...]
+
+	        var velocityScale = 1;
+	        var step = 2;
+	        console.log(width, height);
+	        for(var x = 0;x<width;x+=step){
+	        	for(var y = 0;y<height;y+=step){
+	        		var color = TRANSPARENT_BLACK;
+	        		var coord = projection.invert(x, y);
+	        		if(coord){
+	        			var λ = coord.x, φ = coord.y;
+	        			var wind = _interpolate(λ, φ);
+	        			var scalar = null;
+	        			if(wind){
+	        				wind = _distort(projection, λ, φ, x, y, velocityScale, wind);
+	        				scalar = wind[2];
+	        			}
+	        			if(_isValue(scalar)){
+	        				color = _gradient(scalar, OVERLAY_ALPHA);
+	        			}
+	        		}
+
+	        		_set(x, y, color);
+	        		_set(x+1, y, color);
+	        		_set(x, y+1, color);
+	        		_set(x+1, y+1, color);
+	        	}
+	        }
+	        ctx.putImageData(imageData, 0, 0);
+	        console.log('create mask');
+		}
+	})();
+	
 	function initMap(){
 		var $map = $('#map');
 		// var map = new BMap.Map("map");
