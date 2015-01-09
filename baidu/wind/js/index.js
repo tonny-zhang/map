@@ -58,13 +58,14 @@
         $legend_li = $air_legend.find('li');
     var $arrow = $('.arrow'),
         $arrowli = $air_legend.find('.arrowli');
+    var ALIGN_VAL = ['left', 'center', 'right'];
     function _change_icon(index){
         var $li = $air_day.find('li').eq(index);
         var desc = $li.data('desc'),
             c = $li.data('class'),
             level = $li.data('level');
 
-        $desc_air.text(desc);
+        $desc_air.text(desc).css('text-align', ALIGN_VAL[index]);
         $icon.removeClass().addClass('icon '+c);
         var $legend_on = $legend_li.removeClass('on').eq(level).addClass('on');
         $arrow.css('left', $li.position().left + $li.width()/2 - 13);
@@ -181,7 +182,7 @@
                     h %= 24;
                     arr_time.push(h + ':00');
                 }
-                var splitLineColor = 'rgba(255,255,255,0.1)';
+                var splitLineColor = 'rgba(255, 255, 255, 0.15)';
     			myChart.setOption({
     				tooltip : {
 		                trigger: 'axis',
@@ -191,6 +192,7 @@
                             color: '#ed415a',
                             fontSize: 24
                         },
+                        padding: [5, 20, 5, 20],
                         axisPointer: {
                             lineStyle: {
                                 color: 'red'
@@ -199,7 +201,7 @@
 		                formatter: function(params,ticket,callback){
 		                	var param = params[0];
 		                	var index = param['dataIndex'];
-		                	
+
 		                	return param[1]+'风速：'+param['value']+'米/秒';
 		                }
 		            },
@@ -210,7 +212,10 @@
 							boundaryGap: !0,
 							data: arr_time,
 							axisLine: {
-								show: false
+								show: false,
+                                lineStyle: {
+                                    color: splitLineColor
+                                }
 							},
 							axisTick: {
 								show: true
@@ -226,7 +231,7 @@
 							},
 							splitLine: {
 								show: true,
-                                textStyle: {
+                                lineStyle: {
                                     color: splitLineColor
                                 }
 							},
@@ -243,7 +248,10 @@
 							boundaryGap: false,
 							precision: 0,
 							axisLine: {
-								show: false
+								show: false,
+                                lineStyle: {
+                                    color: splitLineColor
+                                }
 							},
 							axisTick: {
 								show: true
@@ -261,7 +269,7 @@
 							},
                             splitLine: {
                                 onGap: true,
-                                textStyle: {
+                                lineStyle: {
                                     color: splitLineColor
                                 }
                             }
@@ -272,41 +280,62 @@
 						y: 50,
 						x2: 30,
 						y2: 70,
-						borderWidth: 1
+						borderWidth: 1,
+                        borderColor: splitLineColor
 					},
 		            series : [
-		                // {
-		                //     name: '风速',
-		                //     type: 'line',
-		                //     smooth: true,
-		                //     data: arr_val.slice(0,Math.floor(arr_val.length/2))
-		                // },
 		                {
-		                    name: '风速',
 		                    type: 'line',
 		                    smooth: true,
 		                    symbol: "circle",
 							symbolSize: 3,
 							showAllSymbol: !0,
-		                    data: arr_val,//.slice(Math.ceil(arr_val.length/2)),
+		                    data: arr_val,
+                            markPoint: {
+                                data: [
+                                    {
+                                        symbol: 'circle',
+                                        symbolSize: 8,
+                                        xAxis: 0,
+                                        yAxis: arr_val[0],
+                                        itemStyle: {
+                                            normal: {
+                                                color: "white",
+                                                borderColor: "white",
+                                                borderWidth: 5
+                                            }
+                                        }
+                                    },
+                                    {
+                                        symbol: 'circle',
+                                        symbolSize: 8,
+                                        xAxis: arr_val.length-1,
+                                        yAxis: arr_val[arr_val.length-1],
+                                        itemStyle: {
+                                            normal: {
+                                                color: "white",
+                                                borderColor: "white",
+                                                borderWidth: 5
+                                            }
+                                        }
+                                    }
+                                ]
+                            },
 		                    itemStyle: {
 								normal: {
-									color: "white",
+									color: "#070d29",
 									lineStyle: {
-                                        width: 5,
+                                        width: 7,
 										color: "white",
 										type: "dotted"
 									},
 									borderColor: "white",
-									borderWidth: 5
+									borderWidth: 0
 								}
 							}
 		                }
 		            ]
     			});
-				
-				// $loading_wind.hide();
-                
     		});
 			e.domEvent.preventDefault();
     	});

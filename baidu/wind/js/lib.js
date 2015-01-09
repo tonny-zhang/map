@@ -1365,17 +1365,31 @@
 		}).appendTo($('#map .BMap_mask')).get(0);
 		var ctx = canvas.getContext('2d');
 
-		var imageCanvas = canvas;
+		var new_field = VectorField.split(field,sw_point.lng,ne_point.lat,ne_point.lng,sw_point.lat);
 
+		_createMask(width, height);
+
+		var imageCanvas = canvas;
 	    var map_projection = new BMapProjection(map);
 	    var scale = Math.pow(2,map.getZoom() - 4);
-	    var new_field = VectorField.split(field,sw_point.lng,ne_point.lat,ne_point.lng,sw_point.lat);
+	    
 	    var display = new MotionDisplay(canvas, imageCanvas, new_field, numParticles, map_projection);
 	 	mapAnimator = new Animator();
 	 	mapAnimator.zoom = scale;
 	 	mapAnimator.animFunc = isAnimating
 		mapAnimator.add(display);
 		mapAnimator.start(render_delay);
+
+		
+	}
+	function _createMask(width, height){
+		var canvas = $('<canvas width='+width+' height='+height+' class="layer_vector">').css({
+			left: 0,
+			top: 0
+		}).appendTo($('#map .BMap_mask')).get(0);
+		var ctx = canvas.getContext('2d');
+
+
 	}
 	function initMap(){
 		var $map = $('#map');

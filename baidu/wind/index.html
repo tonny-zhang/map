@@ -113,8 +113,7 @@
 			top: 10px;
 			color: white;
 		}
-		.btn_close,
-		.btn_close_nodata{
+		.btn_close{
 			position: absolute;
 			right: 25px;
 			top: 25px;
@@ -122,25 +121,15 @@
 			height: 40px;
 			cursor: pointer;
 			z-index: 11;
-			background: url(img/img.png) no-repeat -252px -39px;
+			background: url(img/icon.png) no-repeat -305px -39px;
+		}
+		.btn_close:hover{
+			background-position: -252px -39px;
 		}
 		
-		.btn_bottom{
-			position: absolute;
-			bottom: 10px;
-			left: 5%;
-			width: 90%;
-			padding: 3px 0;
-			font-size: 14px;
-			background-color: rgba(0,0,0,0.3);
-			text-align: center;
-			border-radius: 3px;
-			color: white;
-			text-decoration: none;
-		}
 		.module_container{
 			width: 100%;
-			height: 405px;
+			height: 415px;
 			overflow: hidden;
 			margin-top: 10px;
 		}
@@ -183,8 +172,8 @@
 			color: white;
 			height: 40px;
 			line-height: 40px;
-			text-indent: 20px;
-			background-color: rgba(255, 255, 255, 0.3);
+			padding: 0 20px;
+			background-color: rgba(255, 255, 255, 0.1);
 			position: relative;
 			z-index: -1;
 		}
@@ -247,7 +236,7 @@
 			width: 0;
 			height: 0;
 			border: 26px solid transparent;
-			border-top: 26px solid #5C6475;
+			border-top: 26px solid #202640;
 			_border-top-color: tomato;
 			_border-bottom-color: tomato;
 			_-webkit-filter: chroma(color=tomato);
@@ -267,7 +256,7 @@
 			width: 822px;
 		}
 		.legend li{
-			font-size: 18px;
+			font-size: 16px;
 			height: 24px;
 			line-height: 24px;
 			width: 136px;
@@ -279,6 +268,7 @@
 		}
 
 		.legend li.on{
+			font-size: 24px;
 			height: 32px;
 			line-height: 32px;
 			margin-top: 0;
@@ -286,7 +276,7 @@
 		.legend li.on span{
 			width: 34px;
 			height: 40px;
-			background: url(img/img.png) no-repeat -254px -107px;
+			background: url(img/icon.png) no-repeat -254px -107px;
 			position: absolute;
 			top: -42px;
 			left: 50%;
@@ -314,14 +304,14 @@
 		.nav{
 			overflow: hidden;
 			text-align: center;
-			margin-top: 50px;
+			margin-top: 40px;
 		}
 		.nav h3{
 			display: inline-block;
 			font-size: 24px;
 			height: 30px;
 			line-height: 30px;
-			color: #aaa;
+			color: rgba(255, 255, 255, 0.3);
 			margin: 0;
 			font-weight: normal;
 		}
@@ -338,7 +328,7 @@
 			margin: 0 5px;
 			height: 30px;
 			line-height: 30px;
-			color: white;
+			color: rgba(255, 255, 255, 0.3);
 			font-size: 30px;
 		}
 
@@ -373,9 +363,10 @@
 		.icon{
 			width: 160px;
 			height: 156px;
-			background-image: url(img/img.png);
+			background-image: url(img/icon.png);
 			background-repeat: no-repeat;
 			margin: 20px auto;
+			margin-bottom: 30px;
 			background-position: -20px 0;
 		}
 		.icon_1{
@@ -402,7 +393,7 @@
 	<body>
 		<div class="loading" id="loading_windspeed">正在拼命加载数据...</div>
 		<div id="chart_container">
-			<a class="btn_close"></a>
+			<a class="btn_close" href="javascript:;"></a>
 			<div class="nav">
 				<h3 class="first on">未来24小时风速预报</h3>
 				<span>|</span>
