@@ -45,7 +45,7 @@
         $air_day = $('.day');
     var html_air = '';
     $.each(DESC_AIR, function(i, v){
-        html_air += '<li style="background-color: '+v[1]+';color:'+(i<3?'black':'white')+'">'+v[0]+'</li>'
+        html_air += '<li style="background-color: '+v[1]+';color:'+(i<3?'#3d3d3d':'white')+'" class="li_'+(i+1)+'">'+v[0]+'<span></span></li>'
     });
     $air_legend.html(html_air+'<li class="arrowli animate"></li>');
 
@@ -103,7 +103,7 @@
                     d.setDate(d.getDate()+i+1);
                     var level_index = parseInt(data['0'+(24*(i+1))]-60);
                     var val = DESC_AIR[level_index];
-                    html += '<li data-level="'+level_index+'" data-desc="'+val[2]+'" data-class="'+val[3]+'">'+arr_date[i]+'<span>'+_format_date(d)+'</span></li>';
+                    html += '<li data-level="'+level_index+'" data-desc="'+val[2]+'" data-class="'+val[3]+'"><b>'+arr_date[i]+'</b><span>'+_format_date(d)+'</span></li>';
                 });
                 $air_day.html(html);
                 _change_icon(0);
@@ -119,51 +119,7 @@
     
     var $loading_wind = $('#loading_wind'),
     	$loading_air = $('#loading_air');
-    $('#btn_air').click(function(){
-    	$chart_container.addClass('show_air');
-    	if(current_map_point){
-    		if($air_ul.data('flag')){
-    			return;
-    		}
-    		$loading_air.show();
-    		loadAir(current_map_point.lng, current_map_point.lat, function(data){
-    			if(data){
-    				var arr = [parseFloat(data['024']), parseFloat(data['048']), parseFloat(data['072'])];
-    				var html = '';
-    				$.each(arr, function(i,v){
-    					var week_index = today+i+1;
-    					week_index = week_index % 7;
-    					var text = '',
-    						color = '',
-    						week = arr_week[week_index];
-    					if(v >= 0 && v < 50){
-    						text = '好';
-    						color = 'rgb(0, 255, 0)';
-    					}else if(v >= 50 && v < 100){
-    						text = '较好';
-    						color = 'rgb(150, 230, 0)';
-    					}else if(v >= 100 && v < 150){
-    						text = '一般';
-    						color = 'rgb(255, 255,0)';
-    					}else if(v >= 150 && v < 200){
-    						text = '较差';
-    						color = 'rgb(255, 100, 0)';
-    					}else if(v >= 200 && v < 300){
-    						text = '差';
-    						color = 'rgb(255, 0, 0)';
-    					}else{
-    						text = '极差';
-    						color = 'rgb(126, 0, 35)';
-    					}
-    					html += '<li>'+week+'<span style="background-color: '+color+'"></span>'+text+'</li>';
-    				});
-    				$air_ul.html(html);
-    				$loading_air.hide();
-    				$air_ul.data('flag', true);
-    			}
-    		});
-    	}
-    });
+    
     var current_map_point;
     var $wind_chart = $('.wind_chart');
 	require([
@@ -186,8 +142,8 @@
     			}
     		},100);
     	}
-    	map.addEventListener("dragend", dragendOrZoomend);
-	    map.addEventListener("zoomend", dragendOrZoomend);
+    	// map.addEventListener("dragend", dragendOrZoomend);
+	    // map.addEventListener("zoomend", dragendOrZoomend);
     	map.addEventListener("click", function(e){
     		clearData();
     		current_map_point = e.point;
@@ -198,12 +154,8 @@
     			marker.setPosition(current_map_point);
     		}
     		$chart_container.removeClass().show();
-      //       .css({
-    		// 	left: e.offsetX+15,
-    		// 	top: e.offsetY-30
-    		// })
-    		// $loading_wind.show();
             $wind_chart.addClass('data_loading');
+            $nav_h3.first().click();
     		// console.log(current_map_point.lng, current_map_point.lat, getWind(current_map_point.lng, current_map_point.lat).length());
     		loadWindSpeed(current_map_point.lng, current_map_point.lat, function(data){
                 $wind_chart.removeClass('data_loading');
