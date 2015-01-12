@@ -936,7 +936,7 @@
 		}
 	};
 
-	var AGE_RANDOM = 100;
+	var AGE_RANDOM = 40;
 	function _rand(){
 		return (Math.random());
 	}
@@ -1061,7 +1061,7 @@
 
 	MotionDisplay.prototype.moveThings = function(animator) {
 		/*控制地图绽放对速度的影响,百度地图等级都是2的指数倍*/
-		var speed = .1 / (animator.zoom || 1);
+		var speed = .05 / (animator.zoom || 1);
 		// speed = 0.005;
 		for (var i = 0; i < this.particles.length; i++) {
 			var p = this.particles[i];
@@ -1127,7 +1127,7 @@
 		} else {
 			g.fillStyle = this.backgroundAlpha;
 		}
-		g.fillStyle = 'rgba(40, 40, 40, 0.99)';
+		g.fillStyle = 'rgba(40, 40, 40, 0.9)';
 		var dx = animator.dx;
 		var dy = animator.dy;
 		var scale = animator.scale;

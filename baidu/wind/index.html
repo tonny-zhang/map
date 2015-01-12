@@ -340,18 +340,48 @@
 			position: relative;
 			overflow: hidden;
 		}
+		@-webkit-keyframes rotate{
+			0%{-webkit-transform: rotate(0deg);}
+			100%{-webkit-transform: rotate(360deg);}
+		}
+		@-moz-keyframes rotate{
+			0%{-moz-transform: rotate(0deg);}
+			100%{-moz-transform: rotate(360deg);}
+		}
+		@keyframes rotate{
+			0%{transform: rotate(0deg);}
+			100%{transform: rotate(360deg);}
+		}
+		@-webkit-keyframes circle 
+		{
+			from {-webkit-transform: rotate(0deg);}
+			to {-webkit-transform: rotate(-360deg);}
+		}
 		.data_loading{
-			background: url(img/windmill_tower.png) center center no-repeat;
+			background: url(img/windmill_tower.png) 47% center no-repeat;
+		}
+		.data_loading:before{
+			content: '等风来...';
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			color: white;
+			font-size: 26px;
 		}
 		.data_loading:after{
+			content: '';
 			width: 104px;
 			height: 104px;
 			background: url(img/windmill_fan.png) center center no-repeat;
 			position: absolute;
-			left: 50%;
+			left: 47%;
 			top: 50%;
-			margin: -52px;
-			top: -100px;
+			margin-left: -52px;
+			margin-top: -110px;
+			-webkit-animation-name:'circle';
+			-webkit-animation-duration: 2s;
+			-webkit-animation-iteration-count: infinite;
+			-webkit-animation-timing-function:linear;
 		}
 		/*.data_loading:after,*/
 		.no_data:after{
