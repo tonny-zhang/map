@@ -1197,7 +1197,7 @@
 					// var _color = 'rgb(0,'+Math.ceil(s * 255)+',0)';
 					// g.shadowColor = _color;
 					g.strokeStyle = _color;
-					// g.strokeStyle = '#d2ff91';
+					g.strokeStyle = '#ccc';
 					g.beginPath();
 					g.moveTo(proj.x, proj.y);
 					g.lineTo(p.oldX, p.oldY);
@@ -1415,6 +1415,18 @@
 	    function _isValue(x) {
 	        return x !== null && x !== undefined;
 	    }
+	    function _translat(g){
+	    	return [g.x, g.y];
+	    }
+	    function _getVal(i, j){
+	    	var row = _grid[i];
+	    	if(_isValue(row)){
+	    		var column = row[j];
+	    		if(_isValue(column)){
+	    			return _translat(column);
+	    		}
+	    	}
+	    }
 	    var λ0, φ0, Δλ, Δφ;
 	    function _interpolate(λ, φ) {
             var i = _floorMod(λ - λ0, 360) / Δλ;  // calculate longitude index in wrapped range [0, 360)
@@ -1432,24 +1444,51 @@
             var fi = Math.floor(i), ci = fi + 1;
             var fj = Math.floor(j), cj = fj + 1;
 
-            var row;
-            if ((row = _grid[fj])) {
-                var g00 = row[fi];
-                var g10 = row[ci];
-                
-                if (_isValue(g00) && _isValue(g10) && (row = _grid[cj])) {
-                	g00 = [g00.x, g00.y];
-                	g10 = [g10.x, g10.y];
-                    var g01 = row[fi];
-                    var g11 = row[ci];
-                    if (_isValue(g01) && _isValue(g11)) {
-	                    g01 = [g01.x, g01.y];
-	                    g11 = [g11.x, g11.y];
-                        // All four points found, so interpolate the value.
-                        return _bilinearInterpolateVector(i - fi, j - fj, g00, g10, g01, g11);
-                    }
-                }
+
+            var column;
+            if((column = _grid[fi])){
+            	var g00 = column[fj],
+            		g01 = column[cj];
+            	if(_isValue(g00) && _isValue(g01) && (column = _grid[ci])){
+            		g00 = _translat(g00);
+                	g01 = _translat(g01);
+                	var g10 = column[fj],
+                		g11 = column[cj];
+                	if (_isValue(g10) && _isValue(g11)) {
+                		g10 = _translat(g10);
+	                    g11 = _translat(g11);
+	                    return _bilinearInterpolateVector(i - fi, j - fj, g00, g10, g01, g11);
+                	}	
+            	}
             }
+
+
+            // var g00 = _getVal(fi, fj);
+            // var g10 = _getVal(fi, cj);
+            // var g01 = _getVal(ci, fj);
+            // var g11 = _getVal(ci, cj);
+            
+            // if(_isValue(g00) && _isValue(g10) && _isValue(g01) && _isValue(g11)){
+            // 	return _bilinearInterpolateVector(i - fi, j - fj, g00, g10, g01, g11);
+            // }
+            // var row;
+            // if ((row = _grid[fj])) {
+            //     var g00 = row[fi];
+            //     var g10 = row[ci];
+                
+            //     if (_isValue(g00) && _isValue(g10) && (row = _grid[cj])) {
+            //     	g00 = _translat(g00);
+            //     	g10 = _translat(g10);
+            //         var g01 = row[fi];
+            //         var g11 = row[ci];
+            //         if (_isValue(g01) && _isValue(g11)) {
+	           //          g01 = _translat(g01);
+	           //          g11 = _translat(g11);
+            //             // All four points found, so interpolate the value.
+            //             return _bilinearInterpolateVector(i - fi, j - fj, g00, g10, g01, g11);
+            //         }
+            //     }
+            // }
             // console.log("cannot interpolate: " + λ + "," + φ + ": " + fi + " " + ci + " " + fj + " " + cj);
             return null;
         }
@@ -1540,7 +1579,9 @@
 	        for(var x = 0;x<width;x+=step){
 	        	for(var y = 0;y<height;y+=step){
 	        		var color = TRANSPARENT_BLACK;
+	        		
 	        		var coord = projection.invert(x, y);
+
 	        		if(coord){
 	        			var λ = coord.x, φ = coord.y;
 	        			var wind = _interpolate(λ, φ);
@@ -1586,7 +1627,7 @@
 
 		global.map = map;
 	    var currentZoom = 5;
-	    map.setMinZoom(4);
+	    // map.setMinZoom(4);
 	    map.setMaxZoom(9);
 	    map.disableInertialDragging();
 	    map.enableScrollWheelZoom();    //启用滚轮放大缩小，默认禁用
