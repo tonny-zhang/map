@@ -1429,7 +1429,8 @@
 	    }
 	    var λ0, φ0, Δλ, Δφ;
 	    function _interpolate(λ, φ) {
-            var i = _floorMod(λ - λ0, 360) / Δλ;  // calculate longitude index in wrapped range [0, 360)
+            // var i = _floorMod(λ - λ0, 360) / Δλ;  // calculate longitude index in wrapped range [0, 360)
+            var i = (λ - λ0) / Δλ;
             var j = (φ0 - φ) / Δφ;                 // calculate latitude index in direction +90 to -90
 
             //         1      2           After converting λ and φ to fractional grid indexes i and j, we find the
@@ -1560,7 +1561,7 @@
 			_height = height;
 			_grid = field.field;
 			λ0 = field.x0, φ0 = field.y1;
-			Δλ = (field.x1 - λ0)/field.w, Δφ = (field.y1 - field.y0)/field.h;
+			Δλ = (field.x1 - field.x0)/field.w, Δφ = (field.y1 - field.y0)/field.h;
 			var canvas = $('<canvas width='+width+' height='+height+' class="layer_vector">').css({
 				left: 0,
 				top: 0
