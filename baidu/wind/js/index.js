@@ -245,6 +245,7 @@
 		            		type: "value",
 		            		name: '风速(m/s)',
 		            		min: 0,
+                            max: 40,
 							boundaryGap: false,
 							precision: 0,
 							axisLine: {
@@ -319,6 +320,50 @@
                                             }
                                         }
                                     }
+                                ]
+                            },
+                            markLine: {
+                                symbol: ['circle', 'circle'],
+                                symbolSize: 1,
+                                itemStyle: {
+                                    normal: {
+                                        color: "red",
+                                        borderColor: "red",
+                                        borderWidth: 1,
+                                        label: {
+                                            show: false
+                                        },
+                                        lineStyle: {
+                                            color: 'red',
+                                            width: 2,
+                                        }
+                                    }
+                                },
+                                data: [
+                                    [{
+                                        xAxis: 0,
+                                        yAxis: 10,
+                                    },
+                                    {
+                                        xAxis: arr_val.length-1,
+                                        yAxis: 10,
+                                    }],
+                                    [{
+                                        xAxis: 0,
+                                        yAxis: 20,
+                                    },
+                                    {
+                                        xAxis: arr_val.length-1,
+                                        yAxis: 20,
+                                    }],
+                                    [{
+                                        xAxis: 0,
+                                        yAxis: 30,
+                                    },
+                                    {
+                                        xAxis: arr_val.length-1,
+                                        yAxis: 30,
+                                    }]
                                 ]
                             },
 		                    itemStyle: {
