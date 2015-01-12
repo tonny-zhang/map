@@ -101,7 +101,7 @@
                 var html = '';
                 $.each(arr, function(i, v){
                     var d = new Date(date.getTime());
-                    d.setDate(d.getDate()+i+1);
+                    d.setDate(d.getDate()+i);
                     var level_index = parseInt(data['0'+(24*(i+1))]-60);
                     var val = DESC_AIR[level_index];
                     html += '<li data-level="'+level_index+'" data-desc="'+val[2]+'" data-class="'+val[3]+'"><b>'+arr_date[i]+'</b><span>'+_format_date(d)+'</span></li>';
@@ -143,22 +143,14 @@
     			}
     		},100);
     	}
-    	// map.addEventListener("dragend", dragendOrZoomend);
-	    // map.addEventListener("zoomend", dragendOrZoomend);
-    	map.addEventListener("click", function(e){
-    		clearData();
-    		current_map_point = e.point;
-    		if(!marker){
-    			marker = new BMap.Marker(current_map_point);
-    			map.addOverlay(marker);
-    		}else{
-    			marker.setPosition(current_map_point);
-    		}
-    		$chart_container.removeClass().show();
+        var initWindTT;
+        function initWind(){
+
+            $chart_container.removeClass().show();
             $wind_chart.addClass('data_loading');
             $nav_h3.first().click();
-    		// console.log(current_map_point.lng, current_map_point.lat, getWind(current_map_point.lng, current_map_point.lat).length());
-    		loadWindSpeed(current_map_point.lng, current_map_point.lat, function(data){
+            // console.log(current_map_point.lng, current_map_point.lat, getWind(current_map_point.lng, current_map_point.lat).length());
+            loadWindSpeed(current_map_point.lng, current_map_point.lat, function(data){
                 $wind_chart.removeClass('data_loading');
                 if(!data){
                     $wind_chart.addClass('no_data');
@@ -182,10 +174,11 @@
                     h %= 24;
                     arr_time.push(h + ':00');
                 }
+                var val_max = Math.max.apply(Math, arr_val);
                 var splitLineColor = 'rgba(255, 255, 255, 0.15)';
-    			myChart.setOption({
-    				tooltip : {
-		                trigger: 'axis',
+                var option = {
+                    tooltip : {
+                        trigger: 'axis',
                         backgroundColor: 'white',
                         borderRadius : 5,
                         textStyle: {
@@ -194,104 +187,104 @@
                         },
                         padding: [5, 20, 5, 20],
                         axisPointer: {
-                            lineStyle: {
-                                color: 'red'
-                            }
+                            type: 'none'
+                            // lineStyle: {
+                            //     color: 'red'
+                            // }
                         },
-		                formatter: function(params,ticket,callback){
-		                	var param = params[0];
-		                	var index = param['dataIndex'];
+                        formatter: function(params,ticket,callback){
+                            var param = params[0];
+                            var index = param['dataIndex'];
 
-		                	return param[1]+'风速：'+param['value']+'米/秒';
-		                }
-		            },
-    				calculable : true,
-    				xAxis : [
-		                {
-		                	type: "category",
-							boundaryGap: !0,
-							data: arr_time,
-							axisLine: {
-								show: false,
+                            return param[1]+'风速：'+param['value']+'米/秒';
+                        }
+                    },
+                    calculable : true,
+                    xAxis : [
+                        {
+                            type: "category",
+                            boundaryGap: !0,
+                            data: arr_time,
+                            axisLine: {
+                                show: false,
                                 lineStyle: {
                                     color: splitLineColor
                                 }
-							},
-							axisTick: {
-								show: true
-							},
-							axisLabel: {
-								margin: 10,
-								interval: 1,
-								textStyle: {
+                            },
+                            axisTick: {
+                                show: true
+                            },
+                            axisLabel: {
+                                margin: 10,
+                                interval: 1,
+                                textStyle: {
                                     color: 'white',
-									fontSize: 10,
-									fontWeight: "lighter"
-								}
-							},
-							splitLine: {
-								show: true,
+                                    fontSize: 10,
+                                    fontWeight: "lighter"
+                                }
+                            },
+                            splitLine: {
+                                show: true,
                                 lineStyle: {
                                     color: splitLineColor
                                 }
-							},
-							splitArea: {
-								show: !1
-							}
-						}
-		            ],
-		            yAxis : [
-		            	{
-		            		type: "value",
-		            		name: '风速(m/s)',
-		            		min: 0,
-                            max: 40,
-							boundaryGap: false,
-							precision: 0,
-							axisLine: {
-								show: false,
+                            },
+                            splitArea: {
+                                show: !1
+                            }
+                        }
+                    ],
+                    yAxis : [
+                        {
+                            type: "value",
+                            name: '风速(m/s)',
+                            min: 0,
+                            boundaryGap: false,
+                            precision: 0,
+                            axisLine: {
+                                show: false,
                                 lineStyle: {
                                     color: splitLineColor
                                 }
-							},
-							axisTick: {
-								show: true
-							},
-							splitArea: {
-								show: false
-							},
-							scale: true,
-							boundaryGap: [.1, .1],
-							axisLabel: {
-								margin: 20,
+                            },
+                            axisTick: {
+                                show: true
+                            },
+                            splitArea: {
+                                show: false
+                            },
+                            scale: true,
+                            boundaryGap: [.1, .1],
+                            axisLabel: {
+                                margin: 20,
                                 textStyle: {
                                     color: 'white'
                                 }
-							},
+                            },
                             splitLine: {
                                 onGap: true,
                                 lineStyle: {
                                     color: splitLineColor
                                 }
                             }
-		            	}
-		            ],
-		            grid: {
-						x: 50,
-						y: 50,
-						x2: 30,
-						y2: 70,
-						borderWidth: 1,
+                        }
+                    ],
+                    grid: {
+                        x: 50,
+                        y: 50,
+                        x2: 30,
+                        y2: 70,
+                        borderWidth: 1,
                         borderColor: splitLineColor
-					},
-		            series : [
-		                {
-		                    type: 'line',
-		                    smooth: true,
-		                    symbol: "circle",
-							symbolSize: 3,
-							showAllSymbol: !0,
-		                    data: arr_val,
+                    },
+                    series : [
+                        {
+                            type: 'line',
+                            smooth: true,
+                            symbol: "circle",
+                            symbolSize: 3,
+                            showAllSymbol: !0,
+                            data: arr_val,
                             markPoint: {
                                 data: [
                                     {
@@ -323,65 +316,105 @@
                                 ]
                             },
                             markLine: {
-                                symbol: ['circle', 'circle'],
-                                symbolSize: 1,
+                                symbol: ['circle','circle'],
                                 itemStyle: {
                                     normal: {
                                         color: "red",
                                         borderColor: "red",
-                                        borderWidth: 1,
+                                        borderWidth: 4,
                                         label: {
-                                            show: false
+                                            show: true,
+                                            formatter: function(a, b){
+                                                b = b.replace(/\s/g,'');
+                                                var space = '　　';
+                                                if(b == '1:1'){
+                                                    return space+'微风';
+                                                }else{
+                                                    return space+'强风';
+                                                }
+                                            },
+                                            textStyle: {
+                                                color: '#ed415a',
+                                                align: 'right'
+                                            }
                                         },
                                         lineStyle: {
-                                            color: 'red',
+                                            color: '#ed415a',
                                             width: 2,
                                         }
                                     }
                                 },
                                 data: [
                                     [{
+                                        name: '1',
                                         xAxis: 0,
-                                        yAxis: 10,
+                                        yAxis: 5.5,
                                     },
                                     {
+                                        name: '1',
                                         xAxis: arr_val.length-1,
-                                        yAxis: 10,
-                                    }],
-                                    [{
-                                        xAxis: 0,
-                                        yAxis: 20,
-                                    },
-                                    {
-                                        xAxis: arr_val.length-1,
-                                        yAxis: 20,
-                                    }],
-                                    [{
-                                        xAxis: 0,
-                                        yAxis: 30,
-                                    },
-                                    {
-                                        xAxis: arr_val.length-1,
-                                        yAxis: 30,
+                                        yAxis: 5.5,
                                     }]
                                 ]
                             },
-		                    itemStyle: {
-								normal: {
-									color: "#070d29",
-									lineStyle: {
+                            itemStyle: {
+                                normal: {
+                                    color: "#070d29",
+                                    lineStyle: {
                                         width: 7,
-										color: "white",
-										type: "dotted"
-									},
-									borderColor: "white",
-									borderWidth: 0
-								}
-							}
-		                }
-		            ]
-    			});
-    		});
+                                        color: "white",
+                                        type: "dotted"
+                                    },
+                                    borderColor: "white",
+                                    borderWidth: 0
+                                },
+                                emphasis: {
+                                    color: "#070d29",
+                                    lineStyle: {
+                                        width: 10,
+                                        color: "white",
+                                        type: "dotted"
+                                    },
+                                    borderColor: "white",
+                                    borderWidth: 20,
+                                }
+                            }
+                        }
+                    ]
+                }
+                if(val_max < 10){
+                    option.yAxis[0].max = 10;
+                }else if(val_max > 11){
+                    option.series[0].markLine.data.push([
+                        {name: '2',
+                            xAxis: 0,
+                            yAxis: 10.8,
+                        },
+                        {name: '2',
+                            xAxis: arr_val.length-1,
+                            yAxis: 10.8,
+                        }
+                    ]);          
+                }
+                myChart.setOption(option);
+            });
+        }
+    	// map.addEventListener("dragend", dragendOrZoomend);
+	    // map.addEventListener("zoomend", dragendOrZoomend);
+    	map.addEventListener("click", function(e){
+            console.log('click');
+    		clearData();
+    		current_map_point = e.point;
+    		if(!marker){
+    			marker = new BMap.Marker(current_map_point);
+    			map.addOverlay(marker);
+    		}else{
+    			marker.setPosition(current_map_point);
+    		}
+    		
+
+            clearTimeout(initWindTT);
+            initWindTT = setTimeout(initWind, 100);
 			e.domEvent.preventDefault();
     	});
     });

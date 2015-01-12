@@ -1061,7 +1061,7 @@
 
 	MotionDisplay.prototype.moveThings = function(animator) {
 		/*控制地图绽放对速度的影响,百度地图等级都是2的指数倍*/
-		var speed = .03 / (animator.zoom || 1);
+		var speed = .1 / (animator.zoom || 1);
 		// speed = 0.005;
 		for (var i = 0; i < this.particles.length; i++) {
 			var p = this.particles[i];
@@ -1347,6 +1347,7 @@
 		if(!field){
 			return;
 		}
+		_dragendOrZoomstart();
 		// console.log('initData');
 		var bounds = map.getBounds(),
 			sw_point = bounds.getSouthWest(),
@@ -1391,8 +1392,15 @@
 
 
 	}
+	function _dragendOrZoomstart(){
+    	// console.log('start');
+    	if(mapAnimator){
+    		mapAnimator.stop();
+    	}
+    	$map.find('.layer_vector').remove();
+    }
+    var $map = $('#map');
 	function initMap(){
-		var $map = $('#map');
 		// var map = new BMap.Map("map");
 		var tileLayer = new BMap.TileLayer,
 			map_url = 'http://map.yuce.baidu.com/tile4/?qt=tile&udt=20141224';
@@ -1424,19 +1432,12 @@
 	    map.addControl(new BMap.MapTypeControl({type: BMAP_MAPTYPE_CONTROL_DROPDOWN,anchor: BMAP_ANCHOR_TOP_RIGHT}));    //左上角，默认地图控件
 		map.addEventListener("dragend", dragendOrZoomend);
 	    map.addEventListener("zoomend", dragendOrZoomend);
-	    map.addEventListener("dragstart", dragendOrZoomstart);
-	    map.addEventListener("zoomstart", dragendOrZoomstart);
+	    map.addEventListener("dragstart", _dragendOrZoomstart);
+	    map.addEventListener("zoomstart", _dragendOrZoomstart);
 	    var canvasOverlay;
 	    function dragendOrZoomend(){
 	    	// console.log('end');
 	        initData(map);
-	    }
-	    function dragendOrZoomstart(){
-	    	// console.log('start');
-	    	if(mapAnimator){
-	    		mapAnimator.stop();
-	    	}
-	    	$map.find('.layer_vector').remove();
 	    }
 
 		map.setMapStyle({
