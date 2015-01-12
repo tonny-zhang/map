@@ -145,7 +145,6 @@
     	}
         var initWindTT;
         function initWind(){
-
             $chart_container.removeClass().show();
             $wind_chart.addClass('data_loading');
             $nav_h3.first().click();

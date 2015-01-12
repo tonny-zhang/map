@@ -341,12 +341,19 @@
 			overflow: hidden;
 		}
 		.data_loading{
-			/*background: url(img/windmill_tower.png) center center no-repeat;*/
+			background: url(img/windmill_tower.png) center center no-repeat;
 		}
 		.data_loading:after{
-
+			width: 104px;
+			height: 104px;
+			background: url(img/windmill_fan.png) center center no-repeat;
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			margin: -52px;
+			top: -100px;
 		}
-		.data_loading:after,
+		/*.data_loading:after,*/
 		.no_data:after{
 			content: '正在加载数据...';
 			color: white;
