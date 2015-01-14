@@ -1127,7 +1127,7 @@
 		} else {
 			g.fillStyle = this.backgroundAlpha;
 		}
-		g.fillStyle = 'rgba(40, 40, 40, 0.9)';
+		g.fillStyle = 'rgba(40, 40, 40, 0.95)';
 		var dx = animator.dx;
 		var dy = animator.dy;
 		var scale = animator.scale;
@@ -1192,7 +1192,7 @@
 
 					// var per = Math.min(Math.ceil(s * 255),100);
 					// t = 200;
-					var _color = "hsl(" + (t) + ", 70%, 50%)";
+					var _color = "hsl(" + (t) + ", 25%, 70%)";
 					// var _color = "hsl(84, 228, "+(t*0.5)+")";
 					// var _color = 'rgb(0,'+Math.ceil(s * 255)+',0)';
 					// g.shadowColor = _color;
@@ -1434,6 +1434,22 @@
 	    map.addEventListener("zoomend", dragendOrZoomend);
 	    map.addEventListener("dragstart", _dragendOrZoomstart);
 	    map.addEventListener("zoomstart", _dragendOrZoomstart);
+
+	    function _resetMap(){
+	    	setTimeout(function(){
+	    		var $BMap_stdMpCtrl = $('.BMap_stdMpCtrl');
+	    		if($BMap_stdMpCtrl.length > 0){
+	    			$BMap_stdMpCtrl.css('top', 60).show();
+	    		}else{
+	    			_resetMap();
+	    		}
+	    	}, 100);
+	    }
+	    _resetMap();
+	    map.addEventListener("load", function(){
+	    	console.log();
+	    });
+
 	    var canvasOverlay;
 	    function dragendOrZoomend(){
 	    	// console.log('end');
@@ -1443,11 +1459,6 @@
 		map.setMapStyle({
 			styleJson: 
 				[
-			          {
-			                    "featureType": "land",
-			                    "elementType": "all",
-			                    "stylers": {}
-			          },
 			          {
 			                    "featureType": "land",
 			                    "elementType": "all",
@@ -1491,6 +1502,28 @@
 			                    "stylers": {
 			                              "color": "#ffffff",
 			                              "visibility": "on"
+			                    }
+			          },
+			          {
+			                    "featureType": "boundary",
+			                    "elementType": "all",
+			                    "stylers": {
+			                              "color": "#9fc5e8",
+			                              "lightness": -42
+			                    }
+			          },
+			          {
+			                    "featureType": "label",
+			                    "elementType": "labels.text.fill",
+			                    "stylers": {
+			                              "color": "#ead1dc"
+			                    }
+			          },
+			          {
+			                    "featureType": "label",
+			                    "elementType": "labels.icon",
+			                    "stylers": {
+			                              "color": "#073763"
 			                    }
 			          }
 			]
@@ -1549,9 +1582,43 @@
 			$ajax.date = ajax_date = date;
 		}
 	}
+	/*时间格式化*/
+	Date.prototype.format = function(format,is_not_second){
+		format || (format = 'yyyy-MM-dd hh:mm:ss');
+		var o = {
+			"M+" : this.getMonth()+1, //month
+			"d+" : this.getDate(),    //day
+			"h+" : this.getHours(),   //hour
+			"m+" : this.getMinutes(), //minute
+			"q+" : Math.floor((this.getMonth()+3)/3),  //quarter
+		}
+		if(!is_not_second){
+			o["s+"] = this.getSeconds(); //second
+			o["S"] = this.getMilliseconds() //millisecond
+		}
+		if(/(y+)/.test(format)){
+			format = format.replace(RegExp.$1,(this.getFullYear()+"").substr(4 - RegExp.$1.length));
+		} 
+		for(var k in o){
+			if(new RegExp("("+ k +")").test(format)){
+				format = format.replace(RegExp.$1,RegExp.$1.length==1 ? o[k] :("00"+ o[k]).substr((""+ o[k]).length));
+			}
+		}
+		
+		return format;
+	}
 	global.loadWind = (function(){
+		var $data_time = $('#data_time');
 		var $loading_windspeed = $('#loading_windspeed');
 		var cb = function(data){
+			if(data){
+				var date_str = data.timestamp;
+				var d = new Date(date_str);
+				if(d && !isNaN(d.getDate())){
+					date_str = d.format();
+				}
+				date_str && $data_time.text(date_str);
+			}
 			field = VectorField.read(data, true);
 			$loading_windspeed.hide();
 			initData(map);

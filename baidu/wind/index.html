@@ -140,11 +140,20 @@
 		}
 		.day li{
 			height: auto;
+			color: #9e9e9e;
 		}
 		.day li b{
-			font-size: 50px;
+			font-size: 36px;
 			height: 40px;
 			line-height: 40px;
+			font-weight: normal;
+		}
+		.day li.on{
+			color: #3d3d3d;
+		}
+		.day li.on b{
+			
+			font-size: 48px;
 		}
 		.day li span{
 			font-size: 18px;
@@ -188,8 +197,8 @@
 			left: -7px;
 			width: 0;
 			height: 0;
-			border: 26px solid transparent;
-			border-top: 26px solid #202640;
+			border: 20px solid transparent;
+			border-top: 20px solid #202640;
 			_border-top-color: tomato;
 			_border-bottom-color: tomato;
 			_-webkit-filter: chroma(color=tomato);
@@ -225,33 +234,16 @@
 			height: 32px;
 			line-height: 32px;
 			margin-top: 0;
+			z-index: 2;
 		}
-		.legend li.on span{
-			width: 34px;
-			height: 40px;
-			background: url(img/icon.png) no-repeat -254px -107px;
+		.legend .legend_mask{
+			width: 100%;
+			height: 100%;
+			background-color: rgba(0,0,0,0.5);
+			left: 0;
+			top: 0;
 			position: absolute;
-			top: -42px;
-			left: 50%;
-			margin-left: -17px;
-		}
-		.legend .li_1.on span{
-			background-position: -254px -107px;
-		}
-		.legend .li_2.on span{
-			background-position: -254px -185px;
-		}
-		.legend .li_3.on span{
-			background-position: -254px -247px;
-		}
-		.legend .li_4.on span {
-			background-position: -254px -324px;
-		}
-		.legend .li_5.on span{
-			background-position: -254px -401px;
-		}
-		.legend .li_6.on span{
-			background-position: -254px -473px;
+			z-index: 1;
 		}
 		
 		.nav{
@@ -371,7 +363,7 @@
 			background-position: -20px -156px;
 		}
 		.icon_3{
-			background-position: -20px -321px;
+			background-position: -20px -319px;
 		}
 		.icon_4{
 			background-position: -20px -477px;
@@ -392,12 +384,50 @@
 			text-align: center;
 		}
 		#address img{
-			vertical-align: -8px;
+			vertical-align: -7px;
 			margin-right: 5px;
+		}
+		#data_time{
+			position: absolute;
+			right: 20px;
+			top: 52px;
+			font-size: 14px;
+			color: white;
+			text-shadow: 0 1px 1px #192c8b;
+			z-index: 101;
+		}
+		#top_nav{
+			position: absolute;
+			top: 0;
+			left: 0;
+			z-index: 101;
+			width: 100%;
+			height: 50px;
+			background-color: rgba(0, 0, 0, 0.5);
+		}
+		.BMap_stdMpCtrl,
+		.BMap_noprint{
+			display: none;
+		}
+		#logo_huafeng{
+			position: absolute;
+			right: 0;
+			bottom: 0;
+			width: 140px;
+			height: 50px;
+			text-align: center;
+			z-index: 101;
+			background: rgba(0, 0, 0, 0.5) url(img/logo_huafeng.png) center center no-repeat;
 		}
 	  	</style>
 	</head>
 	<body>
+		<div id="top_nav">
+			<img src="img/logo.png"/>
+		</div>
+		<div id="logo_huafeng">
+		</div>
+		<div id="data_time"></div>
 		<div class="loading" id="loading_windspeed">正在拼命加载数据...</div>
 		<div id="chart_container">
 			<div id="address"></div>

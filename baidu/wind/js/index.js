@@ -45,12 +45,12 @@
         $air_day = $('.day');
     var html_air = '';
     $.each(DESC_AIR, function(i, v){
-        html_air += '<li style="background-color: '+v[1]+';color:'+(i<3?'#3d3d3d':'white')+'" class="li_'+(i+1)+'">'+v[0]+'<span></span></li>'
+        html_air += '<li style="background-color: '+v[1]+';color:'+(i<3?'#3d3d3d':'white')+'">'+v[0]+'</li>'
     });
-    $air_legend.html(html_air+'<li class="arrowli animate"></li>');
+    $air_legend.html(html_air+'<li class="legend_mask"></li>');
 
     $air_day.delegate('li', 'mouseenter', function(){
-        // $(this).addClass('on').siblings().removeClass('on');
+        $(this).addClass('on').siblings().removeClass('on');
         _change_icon($(this).index());
     });
 
@@ -108,7 +108,7 @@
                     d.setDate(d.getDate()+i);
                     var level_index = parseInt(data['0'+(24*(i+1))]-61);
                     var val = DESC_AIR[level_index];
-                    html += '<li data-level="'+level_index+'" data-desc="'+val[2]+'" data-class="'+val[3]+'"><b>'+arr_date[i]+'</b><span>'+_format_date(d)+'</span></li>';
+                    html += '<li data-level="'+level_index+'" data-desc="'+val[2]+'" data-class="'+val[3]+'" '+(i==0?'class="on"':'')+'><b>'+arr_date[i]+'</b><span>'+_format_date(d)+'</span></li>';
                 });
                 $air_day.html(html);
                 _change_icon(0);
@@ -259,7 +259,13 @@
                                 margin: 20,
                                 textStyle: {
                                     color: 'white'
-                                }
+                                },
+                                formatter: function(a){
+                                    if(a){
+                                        a = a.toFixed(1);
+                                    }
+                                    return a;
+                                },
                             },
                             splitLine: {
                                 onGap: true,
@@ -377,9 +383,8 @@
                         }
                     ]
                 }
-                if(val_max < 10){
-                    option.yAxis[0].max = 12;
-                }else if(val_max > 11){
+                option.yAxis[0].max = val_max + 10;
+                if(val_max > 11){
                     option.series[0].markLine.data.push([
                         {name: '2',
                             xAxis: 0,
@@ -413,7 +418,7 @@
                         address += v;
                     }
                 });
-                $address.html('<img src="img/locate.png"/>'+address);
+                address && $address.html('<img src="img/locate.png"/>'+address);
                 // console.log(address);
                 // alert(addComp.province + ", " + addComp.city + ", " + addComp.district + ", " + addComp.street + ", " + addComp.streetNumber);
             });
