@@ -1611,6 +1611,7 @@
 		var $data_time = $('#data_time');
 		var $loading_windspeed = $('#loading_windspeed');
 		var cb = function(data){
+			$loading_windspeed.hide();
 			if(data){
 				var date_str = data.timestamp;
 				var d = new Date(date_str);
@@ -1618,10 +1619,9 @@
 					date_str = d.format();
 				}
 				date_str && $data_time.text(date_str);
+				field = VectorField.read(data, true);
+				initData(map);
 			}
-			field = VectorField.read(data, true);
-			$loading_windspeed.hide();
-			initData(map);
 		}
 		var _loadwind = _getAjax(function(){
 			return 'http://10.14.85.116/php/wind/data.php?_name=micapsdata&vti='+getType()+'&type=1000';

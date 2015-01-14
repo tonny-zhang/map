@@ -71,15 +71,19 @@
         $arrow.css('left', $li.position().left + $li.width()/2 - 13);
         $arrowli.css('left', $legend_on.position().left + $legend_on.width()/2 - 17);
     }
+    
     $nav_h3.eq(1).click(function(){
         if($air_legend.data('flag')){
+            $wind_chart.addClass($air_legend.data('flag'));
             return;
         }
         $wind_air.addClass('data_loading');
         loadAir(current_map_point.lng, current_map_point.lat, function(data){
+            $air_legend.data('flag', data? 'data': 'no_data');
             if(data){
                 if(!data){
                     $wind_chart.addClass('no_data');
+                    return;
                 }else{
                     $wind_chart.removeClass('no_data');
                 }
@@ -112,7 +116,6 @@
                 });
                 $air_day.html(html);
                 _change_icon(0);
-                $air_legend.data('flag', true);
             }else{
                 $wind_air.addClass('no_data');
             }
@@ -150,13 +153,17 @@
         var initWindTT;
         function initWind(){
             $chart_container.removeClass().show();
+            if($wind_chart.data('flag')){
+                return $wind_chart.addClass($wind_chart.data('flag'));
+            }
             $wind_chart.addClass('data_loading');
-            $nav_h3.first().click();
             // console.log(current_map_point.lng, current_map_point.lat, getWind(current_map_point.lng, current_map_point.lat).length());
             loadWindSpeed(current_map_point.lng, current_map_point.lat, function(data){
                 $wind_chart.removeClass('data_loading');
+                $wind_chart.data('flag', data? 'data': 'no_data');
                 if(!data){
                     $wind_chart.addClass('no_data');
+                    return;
                 }else{
                     $wind_chart.removeClass('no_data');
                 }
@@ -399,6 +406,7 @@
                 myChart.setOption(option);
             });
         }
+        $nav_h3.first().click(initWind);
     	// map.addEventListener("dragend", dragendOrZoomend);
 	    // map.addEventListener("zoomend", dragendOrZoomend);
         var geocoder = new BMap.Geocoder();
@@ -437,7 +445,9 @@
     		
 
             clearTimeout(initWindTT);
-            initWindTT = setTimeout(initWind, 100);
+            initWindTT = setTimeout(function(){
+                $nav_h3.first().click();
+            }, 100);
 			e.domEvent.preventDefault();
     	});
     });
