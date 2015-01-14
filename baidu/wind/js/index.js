@@ -188,12 +188,9 @@
                             color: '#ed415a',
                             fontSize: 24
                         },
-                        padding: [5, 20, 5, 20],
+                        padding: [15, 20, 15, 20],
                         axisPointer: {
                             type: 'none'
-                            // lineStyle: {
-                            //     color: 'red'
-                            // }
                         },
                         formatter: function(params,ticket,callback){
                             var param = params[0];
@@ -322,8 +319,8 @@
                                 symbol: ['circle','circle'],
                                 itemStyle: {
                                     normal: {
-                                        color: "red",
-                                        borderColor: "red",
+                                        color: "rgba(237,65,90,0.7)",
+                                        borderColor: "rgba(237,65,90,0.7)",
                                         borderWidth: 4,
                                         label: {
                                             show: true,
@@ -337,12 +334,12 @@
                                                 }
                                             },
                                             textStyle: {
-                                                color: '#ed415a',
+                                                color: 'rgba(237,65,90,0.7)',
                                                 align: 'right'
                                             }
                                         },
                                         lineStyle: {
-                                            color: '#ed415a',
+                                            color: 'rgba(237,65,90,0.7)',
                                             width: 2,
                                         }
                                     }
@@ -364,22 +361,17 @@
                                 normal: {
                                     color: "#070d29",
                                     lineStyle: {
-                                        width: 7,
+                                        width: 6,
                                         color: "white",
                                         type: "dotted"
                                     },
                                     borderColor: "white",
-                                    borderWidth: 0
+                                    borderWidth: 1
                                 },
                                 emphasis: {
-                                    color: "#070d29",
-                                    lineStyle: {
-                                        width: 10,
-                                        color: "white",
-                                        type: "dotted"
-                                    },
-                                    borderColor: "white",
-                                    borderWidth: 20,
+                                    color: "#ed415a",
+                                    borderColor: "#ed415a",
+                                    borderWidth: 10,
                                 }
                             }
                         }
