@@ -106,7 +106,7 @@
                 $.each(arr, function(i, v){
                     var d = new Date(date.getTime());
                     d.setDate(d.getDate()+i);
-                    var level_index = parseInt(data['0'+(24*(i+1))]-60);
+                    var level_index = parseInt(data['0'+(24*(i+1))]-61);
                     var val = DESC_AIR[level_index];
                     html += '<li data-level="'+level_index+'" data-desc="'+val[2]+'" data-class="'+val[3]+'"><b>'+arr_date[i]+'</b><span>'+_format_date(d)+'</span></li>';
                 });
@@ -408,7 +408,7 @@
         var $address = $('#address');
         function _initAddress(){
             var date = new Date();
-            $address.text('');
+            $address.html('');
             geocoder.getLocation(current_map_point, function(rs){
                 if(geocoder.date != date){
                     return;
@@ -421,7 +421,7 @@
                         address += v;
                     }
                 });
-                $address.text(address);
+                $address.html('<img src="img/locate.png"/>'+address);
                 // console.log(address);
                 // alert(addComp.province + ", " + addComp.city + ", " + addComp.district + ", " + addComp.street + ", " + addComp.streetNumber);
             });
