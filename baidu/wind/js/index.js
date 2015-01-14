@@ -78,8 +78,12 @@
         $wind_air.addClass('data_loading');
         loadAir(current_map_point.lng, current_map_point.lat, function(data){
             if(data){
+                if(!data){
+                    $wind_chart.addClass('no_data');
+                }else{
+                    $wind_chart.removeClass('no_data');
+                }
                 $wind_air.removeClass('data_loading');
-                $wind_air.removeClass('no_data');
 
                 var arr = [parseFloat(data['024']), parseFloat(data['048']), parseFloat(data['072'])];
                 var m = /(\d{4})(\d{2})(\d{2})(\d{2})/.exec(data.timestamp);
@@ -382,7 +386,7 @@
                     ]
                 }
                 if(val_max < 10){
-                    option.yAxis[0].max = 10;
+                    option.yAxis[0].max = 12;
                 }else if(val_max > 11){
                     option.series[0].markLine.data.push([
                         {name: '2',
@@ -400,10 +404,33 @@
         }
     	// map.addEventListener("dragend", dragendOrZoomend);
 	    // map.addEventListener("zoomend", dragendOrZoomend);
+        var geocoder = new BMap.Geocoder();
+        var $address = $('#address');
+        function _initAddress(){
+            var date = new Date();
+            $address.text('');
+            geocoder.getLocation(current_map_point, function(rs){
+                if(geocoder.date != date){
+                    return;
+                }
+                var addComp = rs.addressComponents;
+                var info_arr = [addComp.province, addComp.city, addComp.district, addComp.street, addComp.streetNumber];
+                var address = '';
+                $.each(info_arr, function(i, v){
+                    if(v && address.indexOf(v) == -1){
+                        address += v;
+                    }
+                });
+                $address.text(address);
+                // console.log(address);
+                // alert(addComp.province + ", " + addComp.city + ", " + addComp.district + ", " + addComp.street + ", " + addComp.streetNumber);
+            });
+            geocoder.date = date;
+        }
     	map.addEventListener("click", function(e){
-            console.log('click');
     		clearData();
     		current_map_point = e.point;
+            _initAddress();
     		if(!marker){
     			marker = new BMap.Marker(current_map_point);
     			map.addOverlay(marker);

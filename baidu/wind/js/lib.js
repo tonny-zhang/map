@@ -1543,6 +1543,7 @@
 				},
 				error: function(e){
 					console.log(arguments);
+					callback && callback();
 				}
 			});
 			$ajax.date = ajax_date = date;
