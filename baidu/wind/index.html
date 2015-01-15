@@ -165,6 +165,7 @@
 		}
 		
 		#loading_windspeed{
+			background: none;
 			display: none;
 		}
 		.anchorBL{
@@ -372,7 +373,8 @@
 			vertical-align: -7px;
 			margin-right: 5px;
 		}
-		#data_time{
+		#data_time,
+		#air_time{
 			position: absolute;
 			right: 20px;
 			top: 52px;
@@ -380,6 +382,9 @@
 			color: white;
 			text-shadow: 0 1px 1px #192c8b;
 			z-index: 101;
+		}
+		#air_time{
+			top: -30px;
 		}
 		#top_nav{
 			position: absolute;
@@ -404,9 +409,18 @@
 			z-index: 101;
 			background: rgba(0, 0, 0, 0.5) url(img/logo_huafeng.png) center center no-repeat;
 		}
+		.preload{
+			position: absolute;
+			left: -100%;
+			top: -100px;
+		}
 	  	</style>
 	</head>
 	<body>
+		<div class="preload">
+			<img src="img/windmill_fan.png"/>
+			<img src="img/windmill_tower.png"/>
+		</div>
 		<div id="top_nav">
 			<img src="img/logo.png"/>
 		</div>
@@ -432,6 +446,7 @@
 						<div class="c">
 							<div class="icon"></div>
 							<div class="legend_c clear">
+								<div id="air_time"></div>
 								<ul class="legend"></ul>
 							</div>
 							<div class="desc_air"></div>

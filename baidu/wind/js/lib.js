@@ -1613,7 +1613,7 @@
 		var cb = function(data){
 			$loading_windspeed.hide();
 			if(data){
-				var date_str = data.timestamp;
+				var date_str = data.timestamp*1000;
 				var d = new Date(date_str);
 				if(d && !isNaN(d.getDate())){
 					date_str = d.format();

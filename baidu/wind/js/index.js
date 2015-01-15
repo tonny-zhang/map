@@ -16,6 +16,7 @@
     function clearData(){
     	current_map_point = null;
     	$air_legend.removeData('flag');
+        $wind_chart.removeData('flag');
     }
     var $btn_close = $('.btn_close').click(function(){
     	$chart_container.hide();
@@ -72,12 +73,14 @@
         $arrowli.css('left', $legend_on.position().left + $legend_on.width()/2 - 17);
     }
     
+    var $air_time = $('#air_time');
     $nav_h3.eq(1).click(function(){
         if($air_legend.data('flag')){
             $wind_chart.addClass($air_legend.data('flag'));
             return;
         }
         $wind_air.addClass('data_loading');
+        $air_time.text('');
         loadAir(current_map_point.lng, current_map_point.lat, function(data){
             $air_legend.data('flag', data? 'data': 'no_data');
             if(data){
@@ -96,6 +99,7 @@
                 }else{
                     var date = new Date();
                 }
+                $air_time.text(date.format()+'发布');
                 function _format_num(num){
                     if(num < 10){
                         return '0'+num;
