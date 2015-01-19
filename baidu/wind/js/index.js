@@ -73,6 +73,15 @@
         $arrowli.css('left', $legend_on.position().left + $legend_on.width()/2 - 17);
     }
     
+    function _getTime(timestamp){
+        var m = /(\d{4})(\d{2})(\d{2})(\d{2})/.exec(timestamp);
+        if(m){
+            var date = new Date(m[1]+'-'+m[2]+'-'+m[3]+' '+m[4]+':00');
+        }else{
+            var date = new Date();
+        }
+        return date;
+    }
     var $air_time = $('#air_time');
     $nav_h3.eq(1).click(function(){
         if($air_legend.data('flag')){
@@ -93,12 +102,7 @@
                 $wind_air.removeClass('data_loading');
 
                 var arr = [parseFloat(data['024']), parseFloat(data['048']), parseFloat(data['072'])];
-                var m = /(\d{4})(\d{2})(\d{2})(\d{2})/.exec(data.timestamp);
-                if(m){
-                    var date = new Date(m[1]+'-'+m[2]+'-'+m[3]+' '+m[4]+':00');
-                }else{
-                    var date = new Date();
-                }
+                var date = _getTime(data.timestamp);
                 $air_time.text(date.format()+'发布');
                 function _format_num(num){
                     if(num < 10){
@@ -171,22 +175,16 @@
                 }else{
                     $wind_chart.removeClass('no_data');
                 }
-
-                var m = /(\d{4})(\d{2})(\d{2})(\d{2})/.exec(data.timestamp);
-                if(m){
-                    var date = new Date(m[1]+'-'+m[2]+'-'+m[3]+' '+m[4]+':00');
-                }else{
-                    var date = new Date();
-                }
+                var date = _getTime(data.timestamp);
                 var hour = date.getHours();
                 delete data.timestamp;
                 var arr_val = [],
                     arr_time = [];
                 for(var i in data){
                     arr_val.push(parseFloat(data[i].windspeed));
-                    var h = parseInt(i) + hour;
-                    h %= 24;
-                    arr_time.push(h + ':00');
+                    var d = new Date();
+                    d.setHours(hour + parseInt(i));
+                    arr_time.push(d.format('MM-dd hh:00'));
                 }
                 var val_max = Math.max.apply(Math, arr_val);
                 var splitLineColor = 'rgba(255, 255, 255, 0.15)';
