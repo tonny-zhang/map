@@ -176,13 +176,14 @@
                     $wind_chart.removeClass('no_data');
                 }
                 var date = _getTime(data.timestamp);
+                var time = date.getTime();
                 var hour = date.getHours();
                 delete data.timestamp;
                 var arr_val = [],
                     arr_time = [];
                 for(var i in data){
                     arr_val.push(parseFloat(data[i].windspeed));
-                    var d = new Date();
+                    var d = new Date(time);
                     d.setHours(hour + parseInt(i));
                     arr_time.push(d.format('MM-dd hh:00'));
                 }
