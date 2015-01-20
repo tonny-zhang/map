@@ -88,19 +88,15 @@
             $wind_chart.addClass($air_legend.data('flag'));
             return;
         }
+        $wind_air.removeClass('no_data');
         $wind_air.addClass('data_loading');
         $air_time.text('');
         loadAir(current_map_point.lng, current_map_point.lat, function(data){
             $air_legend.data('flag', data? 'data': 'no_data');
-            if(data){
-                if(!data){
-                    $wind_chart.addClass('no_data');
-                    return;
-                }else{
-                    $wind_chart.removeClass('no_data');
-                }
-                $wind_air.removeClass('data_loading');
+            $wind_air.removeClass('data_loading');
 
+            if(data && data['024'] && data['048'] && data['072']){
+                
                 var arr = [parseFloat(data['024']), parseFloat(data['048']), parseFloat(data['072'])];
                 var date = _getTime(data.timestamp);
                 $air_time.text(date.format()+'发布');
