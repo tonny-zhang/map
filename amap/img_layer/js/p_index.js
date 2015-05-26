@@ -321,7 +321,6 @@
 		})();
 		var rainfall_data ;
 		function draw_canvas(c, startTime) {
-			console.log(rainfall_data);
 		  if (rainfall_data != undefined) {
 
 		    // update
