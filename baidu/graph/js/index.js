@@ -1,6 +1,7 @@
 ! function() {
 	var map = new BMap.Map("map");
-
+	var mapType = new BMap.MapTypeControl({mapTypes: [BMAP_NORMAL_MAP,BMAP_HYBRID_MAP], anchor: BMAP_ANCHOR_BOTTOM_RIGHT});
+	map.addControl(mapType);
 	map.centerAndZoom(new BMap.Point(116.404, 39.915), 5);
 	// map.centerAndZoom(new BMap.Point(69.772, 46.886), 8);
 	map.enableScrollWheelZoom();
