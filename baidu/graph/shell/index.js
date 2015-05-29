@@ -79,7 +79,7 @@ var dir_data = path.join(dir_project, 'data');
 rmfileSync(dir_data, true);
 mkdirSync(dir_data);
 
-
+var time = new Date().getTime();
 fs.readdir(dir_data_source, function(err, files){
 	if(err){
 		console.log(err);
@@ -87,7 +87,7 @@ fs.readdir(dir_data_source, function(err, files){
 		var list_data = [];
 		files.forEach(function(file){
 			var file_path = path.join(dir_data_source, file);
-			var file_name_new = encrypt(file_path)+'.json';
+			var file_name_new = encrypt(file_path+time)+'.json';
 			var save_file_path = path.join(dir_data, file_name_new);
 			copySync(file_path, save_file_path);
 			list_data.push({

@@ -6,17 +6,22 @@
 	// map.centerAndZoom(new BMap.Point(69.772, 46.886), 8);
 	map.enableScrollWheelZoom();
 
+	var COLOR_OPACITY = 'rgba(0,0,0,0)';
 	var OPACITY = 0.8;
 	function _addPolygon(items, fn_getXY, color_fill, color_stroke) {
+		if(color_fill == COLOR_OPACITY){
+			return;
+		}
 		var point_arr = [];
 		$.each(items, function(v_i, v_v) {
 			var xy = fn_getXY(v_v);
 			var point = new BMap.Point(xy[0], xy[1]);
 			point_arr.push(point);
 		});
+		color_stroke = 'rgb(255, 255, 255)';
 		var polygon = new BMap.Polygon(point_arr, {
-			strokeColor: color_fill || color_stroke || 'rgba(255,0,0,1)',
-			fillColor: color_fill || 'rgba(0,0,0,0)',
+			strokeColor: color_stroke || color_fill || 'rgba(255,0,0,1)',
+			fillColor: color_fill || COLOR_OPACITY,
 			fillOpacity: OPACITY,
 			strokeWeight: 1,
 			strokeOpacity: OPACITY
