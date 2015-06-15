@@ -936,7 +936,7 @@
 		}
 	};
 
-	var AGE_RANDOM = 40;
+	var AGE_RANDOM = 100;
 	function _rand(){
 		return (Math.random());
 	}
@@ -1061,7 +1061,7 @@
 
 	MotionDisplay.prototype.moveThings = function(animator) {
 		/*控制地图绽放对速度的影响,百度地图等级都是2的指数倍*/
-		var speed = .05 / (animator.zoom || 1);
+		var speed = .03 / (animator.zoom || 1);
 		// speed = 0.005;
 		for (var i = 0; i < this.particles.length; i++) {
 			var p = this.particles[i];
@@ -1127,7 +1127,7 @@
 		} else {
 			g.fillStyle = this.backgroundAlpha;
 		}
-		g.fillStyle = 'rgba(40, 40, 40, 0.95)';
+		g.fillStyle = 'rgba(40, 40, 40, 0.99)';
 		var dx = animator.dx;
 		var dy = animator.dy;
 		var scale = animator.scale;
@@ -1192,12 +1192,12 @@
 
 					// var per = Math.min(Math.ceil(s * 255),100);
 					// t = 200;
-					var _color = "hsl(" + (t) + ", 25%, 70%)";
+					var _color = "hsl(" + (t) + ", 70%, 50%)";
 					// var _color = "hsl(84, 228, "+(t*0.5)+")";
 					// var _color = 'rgb(0,'+Math.ceil(s * 255)+',0)';
 					// g.shadowColor = _color;
 					g.strokeStyle = _color;
-					// g.strokeStyle = '#d2ff91';
+					g.strokeStyle = '#ccc';
 					g.beginPath();
 					g.moveTo(proj.x, proj.y);
 					g.lineTo(p.oldX, p.oldY);
@@ -1331,7 +1331,7 @@
 	BMapProjection.prototype.invert = function(x, y) {
 		var map = this.map;
 		var point = map.pixelToPoint(new BMap.Pixel(x,y));
-		return new Vector(point.lng,point.lat);
+		return new Vector(point.lng, point.lat);
 	}
 	function isAnimating() {
 		return true;
@@ -1341,13 +1341,12 @@
 	
 	var field,// = VectorField.read(windData, true),
 		render_delay = 40,
-		numParticles = 5000; // slowwwww browsers; 3500
+		numParticles = 3000; // slowwwww browsers; 3500
 	var mapAnimator;
 	function initData(map){
 		if(!field){
 			return;
 		}
-		_dragendOrZoomstart();
 		// console.log('initData');
 		var bounds = map.getBounds(),
 			sw_point = bounds.getSouthWest(),
@@ -1367,14 +1366,15 @@
 		var ctx = canvas.getContext('2d');
 
 		var new_field = VectorField.split(field,sw_point.lng,ne_point.lat,ne_point.lng,sw_point.lat);
+		var map_projection = new BMapProjection(map);
 
-		_createMask(width, height);
+		_createMask(width, height, new_field, map_projection);
 
 		var imageCanvas = canvas;
-	    var map_projection = new BMapProjection(map);
+	    
 	    var scale = Math.pow(2,map.getZoom() - 4);
 	    
-	    var display = new MotionDisplay(canvas, imageCanvas, new_field, numParticles, map_projection);
+	    var display = new MotionDisplay(canvas, imageCanvas, new_field, Math.min(numParticles, numParticles*width/1000, numParticles*height/800), map_projection);
 	 	mapAnimator = new Animator();
 	 	mapAnimator.zoom = scale;
 	 	mapAnimator.animFunc = isAnimating
@@ -1383,24 +1383,214 @@
 
 		
 	}
-	function _createMask(width, height){
-		var canvas = $('<canvas width='+width+' height='+height+' class="layer_vector">').css({
-			left: 0,
-			top: 0
-		}).appendTo($('#map .BMap_mask')).get(0);
-		var ctx = canvas.getContext('2d');
+	var _createMask = (function(){
+		var TRANSPARENT_BLACK = [0, 0, 0, 0]; 		// singleton 0 rgba
+		var OVERLAY_ALPHA = Math.floor(0.4*255);  	// overlay transparency (on scale [0, 255])
+		var data, _width, _height, _grid;
+		var _isVisible = function(x, y) {
+            var i = (y * _width + x) * 4;
+            return data[i + 3] > 0;  // non-zero alpha means pixel is visible
+        }
+        var _set = function(x, y, rgba){
+        	var i = (y * _width + x) * 4;
+            data[i    ] = rgba[0];
+            data[i + 1] = rgba[1];
+            data[i + 2] = rgba[2];
+            data[i + 3] = rgba[3];
+        }
+        function _bilinearInterpolateVector(x, y, g00, g10, g01, g11) {
+	        var rx = (1 - x);
+	        var ry = (1 - y);
+	        var a = rx * ry,  b = x * ry,  c = rx * y,  d = x * y;
+	        var u = g00[0] * a + g10[0] * b + g01[0] * c + g11[0] * d;
+	        var v = g00[1] * a + g10[1] * b + g01[1] * c + g11[1] * d;
+	        return [u, v, Math.sqrt(u * u + v * v)];
+	    }
+	    function _floorMod(a, n) {
+	        var f = a - n * Math.floor(a / n);
+	        // HACK: when a is extremely close to an n transition, f can be equal to n. This is bad because f must be
+	        //       within range [0, n). Check for this corner case. Example: a:=-1e-16, n:=10. What is the proper fix?
+	        return f === n ? 0 : f;
+	    }
+	    function _isValue(x) {
+	        return x !== null && x !== undefined;
+	    }
+	    function _translat(g){
+	    	return [g.x, g.y];
+	    }
+	    function _getVal(i, j){
+	    	var row = _grid[i];
+	    	if(_isValue(row)){
+	    		var column = row[j];
+	    		if(_isValue(column)){
+	    			return _translat(column);
+	    		}
+	    	}
+	    }
+	    var λ0, φ0, Δλ, Δφ, dH;
+	    function _interpolate(λ, φ) {
+            var i = _floorMod(λ - λ0, 360) / Δλ;  // calculate longitude index in wrapped range [0, 360)
+            // var i = (λ - λ0) / Δλ;
+            var j = dH - (φ0 - φ) / Δφ;                 // calculate latitude index in direction +90 to -90
 
+            //         1      2           After converting λ and φ to fractional grid indexes i and j, we find the
+            //        fi  i   ci          four points "G" that enclose point (i, j). These points are at the four
+            //         | =1.4 |           corners specified by the floor and ceiling of i and j. For example, given
+            //      ---G--|---G--- fj 8   i = 1.4 and j = 8.3, the four surrounding grid points are (1, 8), (2, 8),
+            //    j ___|_ .   |           (1, 9) and (2, 9).
+            //  =8.3   |      |
+            //      ---G------G--- cj 9   Note that for wrapped grids, the first column is duplicated as the last
+            //         |      |           column, so the index ci can be used without taking a modulo.
 
-	}
-	function _dragendOrZoomstart(){
-    	// console.log('start');
-    	if(mapAnimator){
-    		mapAnimator.stop();
-    	}
-    	$map.find('.layer_vector').remove();
-    }
-    var $map = $('#map');
+            var fi = Math.floor(i), ci = fi + 1;
+            var fj = Math.floor(j), cj = fj + 1;
+
+            var column;
+            if((column = _grid[fi])){
+            	var g00 = column[fj],
+            		g01 = column[cj];
+            	if(_isValue(g00) && _isValue(g01) && (column = _grid[ci])){
+            		g00 = _translat(g00);
+                	g01 = _translat(g01);
+                	var g10 = column[fj],
+                		g11 = column[cj];
+                	if (_isValue(g10) && _isValue(g11)) {
+                		g10 = _translat(g10);
+	                    g11 = _translat(g11);
+	                    var return_val = _bilinearInterpolateVector(i - fi, j - fj, g00, g10, g01, g11);
+	                    return return_val;
+                	}	
+            	}
+            }
+
+            return null;
+        }
+        function _distortion(projection, λ, φ, x, y) {
+	        var hλ = λ < 0 ? H : -H;
+	        var hφ = φ < 0 ? H : -H;
+	        // var pλ = projection([λ + hλ, φ]);
+	        // var pφ = projection([λ, φ + hφ]);
+	        var pλ = projection.project(λ + hλ, φ);
+	        var pφ = projection.project(λ, φ + hφ);
+
+	        // Meridian scale factor (see Snyder, equation 4-3), where R = 1. This handles issue where length of 1° λ
+	        // changes depending on φ. Without this, there is a pinching effect at the poles.
+	        var k = Math.cos(φ / 360 * τ);
+
+	        return [
+	            (pλ.x - x) / hλ / k,
+	            (pλ.y - y) / hλ / k,
+	            (pφ.x - x) / hφ,
+	            (pφ.y - y) / hφ
+	        ];
+	    }
+        function _distort(projection, λ, φ, x, y, scale, wind) {
+	        var u = wind[0] * scale;
+	        var v = wind[1] * scale;
+	        var d = _distortion(projection, λ, φ, x, y);
+
+	        // Scale distortion vectors by u and v, then add.
+	        wind[0] = d[0] * u + d[2] * v;
+	        wind[1] = d[1] * u + d[3] * v;
+	        return wind;
+	    }
+
+	    var BOUNDARY = 0.45;
+	    var τ = 2 * Math.PI;
+    	var H = 0.0000360;  // 0.0000360°φ ~= 4m
+	    function _sinebowColor(hue, a) {
+	        // Map hue [0, 1] to radians [0, 5/6τ]. Don't allow a full rotation because that keeps hue == 0 and
+	        // hue == 1 from mapping to the same color.
+	        var rad = hue * τ * 5/6;
+	        rad *= 0.75;  // increase frequency to 2/3 cycle per rad
+
+	        var s = Math.sin(rad);
+	        var c = Math.cos(rad);
+	        var r = Math.floor(Math.max(0, -c) * 255);
+	        var g = Math.floor(Math.max(s, 0) * 255);
+	        var b = Math.floor(Math.max(c, 0, -s) * 255);
+	        return [r, g, b, a];
+	    }
+	    function _colorInterpolator(start, end) {
+	        var r = start[0], g = start[1], b = start[2];
+	        var Δr = end[0] - r, Δg = end[1] - g, Δb = end[2] - b;
+	        return function(i, a) {
+	            return [Math.floor(r + i * Δr), Math.floor(g + i * Δg), Math.floor(b + i * Δb), a];
+	        };
+	    }
+	    // console.log(_sinebowColor(1.0, 0));
+	    var _fadeToWhite = _colorInterpolator(_sinebowColor(1.0, 0), [255, 255, 255]);
+	    function _extendedSinebowColor(i, a) {
+	        return i <= BOUNDARY ?
+	            _sinebowColor(i / BOUNDARY, a) :
+	            _fadeToWhite((i - BOUNDARY) / (1 - BOUNDARY), a);
+	    }
+	    function _gradient(v, a){
+	    	return _extendedSinebowColor(Math.min(v, 100) / 100, a);
+	    }
+		return function(width, height, field, projection){
+			// console.log(field);
+			_width = width;
+			_height = height;
+			_grid = field.field;
+			dH = field.h;
+			λ0 = field.x0, φ0 = field.y1;
+			Δλ = (field.x1 - field.x0)/field.w, Δφ = (field.y1 - field.y0)/dH;
+			// console.log(λ0, φ0, Δλ, Δφ);
+			var canvas = $('<canvas width='+width+' height='+height+' class="layer_vector layer_mask">').css({
+				left: 0,
+				top: 0
+			}).appendTo($('#map .BMap_mask')).get(0);
+			var ctx = canvas.getContext('2d');
+			ctx.fillStyle = "rgba(255, 0, 0, 1)";
+	        ctx.fill();
+	        // d3.select("#display").node().appendChild(canvas);  // make mask visible for debugging
+
+	        var imageData = ctx.getImageData(0, 0, width, height);
+	        data = imageData.data;  // layout: [r, g, b, a, r, g, b, a, ...]
+
+	        var velocityScale = 1;
+	        var step = 2;
+	        function _getColor(wind){
+	        	var MAX_WIND = 20;
+	        	var opacity = Math.min(wind[2]/MAX_WIND, 1);
+	        	return [255, 255, 255, opacity*255];
+	        }
+	        for(var x = 0;x<width;x+=step){
+	        	for(var y = 0;y<height;y+=step){
+	        		var color = TRANSPARENT_BLACK;
+	        		
+	        		var coord = projection.invert(x, y);
+
+	        		if(coord){
+	        			var λ = coord.x, φ = coord.y;
+	        			var wind = _interpolate(λ, φ);
+	        			// if(wind){
+		        		// 	color = _getColor(wind);
+		        		// }
+	        			var scalar = null;
+	        			if(wind){
+	        				wind = _distort(projection, λ, φ, x, y, velocityScale, wind);
+	        				scalar = wind[2];
+	        			}
+	        			if(_isValue(scalar)){
+	        				color = _gradient(scalar, OVERLAY_ALPHA);
+	        			}
+	        		}
+
+	        		_set(x, y, color);
+	        		_set(x+1, y, color);
+	        		_set(x, y+1, color);
+	        		_set(x+1, y+1, color);
+	        	}
+	        }
+	        ctx.putImageData(imageData, 0, 0);
+	        console.log('create mask');
+		}
+	})();
+	
 	function initMap(){
+		var $map = $('#map');
 		// var map = new BMap.Map("map");
 		var tileLayer = new BMap.TileLayer,
 			map_url = 'http://map.yuce.baidu.com/tile4/?qt=tile&udt=20141224';
@@ -1420,7 +1610,7 @@
 
 		global.map = map;
 	    var currentZoom = 5;
-	    map.setMinZoom(4);
+	    // map.setMinZoom(4);
 	    map.setMaxZoom(9);
 	    map.disableInertialDragging();
 	    map.enableScrollWheelZoom();    //启用滚轮放大缩小，默认禁用
@@ -1432,33 +1622,43 @@
 	    map.addControl(new BMap.MapTypeControl({type: BMAP_MAPTYPE_CONTROL_DROPDOWN,anchor: BMAP_ANCHOR_TOP_RIGHT}));    //左上角，默认地图控件
 		map.addEventListener("dragend", dragendOrZoomend);
 	    map.addEventListener("zoomend", dragendOrZoomend);
-	    map.addEventListener("dragstart", _dragendOrZoomstart);
-	    map.addEventListener("zoomstart", _dragendOrZoomstart);
-
-	    function _resetMap(){
-	    	setTimeout(function(){
-	    		var $BMap_stdMpCtrl = $('.BMap_stdMpCtrl');
-	    		if($BMap_stdMpCtrl.length > 0){
-	    			$BMap_stdMpCtrl.css('top', 60).show();
-	    		}else{
-	    			_resetMap();
-	    		}
-	    	}, 100);
-	    }
-	    _resetMap();
-	    map.addEventListener("load", function(){
-	    	console.log();
-	    });
-
+	    map.addEventListener("dragstart", dragendOrZoomstart);
+	    map.addEventListener("zoomstart", dragendOrZoomstart);
 	    var canvasOverlay;
+	    var tt_dragend;
 	    function dragendOrZoomend(){
+	    	clearTimeout(tt_dragend);
 	    	// console.log('end');
 	        initData(map);
 	    }
+	    function dragendOrZoomstart(){
+	    	// console.log('start');
+	    	if(mapAnimator){
+	    		mapAnimator.stop();
+	    	}
+	    	$map.find('.layer_vector').remove();
+	    	clearTimeout(tt_dragend);
+	    	tt_dragend = setTimeout(function(){
+	    		dragendOrZoomend();
+	    	}, 500);
+	    }
+	    var tt_resize;
+	    $(window).on('resize', function(){
+	    	dragendOrZoomstart();
+	    	clearTimeout(tt_resize);
+	    	tt_resize = setTimeout(function(){
+	    		dragendOrZoomend();
+	    	}, 10);
+	    });
 
 		map.setMapStyle({
 			styleJson: 
 				[
+			          {
+			                    "featureType": "land",
+			                    "elementType": "all",
+			                    "stylers": {}
+			          },
 			          {
 			                    "featureType": "land",
 			                    "elementType": "all",
@@ -1502,28 +1702,6 @@
 			                    "stylers": {
 			                              "color": "#ffffff",
 			                              "visibility": "on"
-			                    }
-			          },
-			          {
-			                    "featureType": "boundary",
-			                    "elementType": "all",
-			                    "stylers": {
-			                              "color": "#9fc5e8",
-			                              "lightness": -42
-			                    }
-			          },
-			          {
-			                    "featureType": "label",
-			                    "elementType": "labels.text.fill",
-			                    "stylers": {
-			                              "color": "#ead1dc"
-			                    }
-			          },
-			          {
-			                    "featureType": "label",
-			                    "elementType": "labels.icon",
-			                    "stylers": {
-			                              "color": "#073763"
 			                    }
 			          }
 			]
@@ -1576,59 +1754,43 @@
 				},
 				error: function(e){
 					console.log(arguments);
-					callback && callback();
+					alert('数据加载出现错误，请重试！');
 				}
 			});
 			$ajax.date = ajax_date = date;
 		}
 	}
-	/*时间格式化*/
-	Date.prototype.format = function(format,is_not_second){
-		format || (format = 'yyyy-MM-dd hh:mm:ss');
-		var o = {
-			"M+" : this.getMonth()+1, //month
-			"d+" : this.getDate(),    //day
-			"h+" : this.getHours(),   //hour
-			"m+" : this.getMinutes(), //minute
-			"q+" : Math.floor((this.getMonth()+3)/3),  //quarter
-		}
-		if(!is_not_second){
-			o["s+"] = this.getSeconds(); //second
-			o["S"] = this.getMilliseconds() //millisecond
-		}
-		if(/(y+)/.test(format)){
-			format = format.replace(RegExp.$1,(this.getFullYear()+"").substr(4 - RegExp.$1.length));
-		} 
-		for(var k in o){
-			if(new RegExp("("+ k +")").test(format)){
-				format = format.replace(RegExp.$1,RegExp.$1.length==1 ? o[k] :("00"+ o[k]).substr((""+ o[k]).length));
-			}
-		}
-		
-		return format;
-	}
 	global.loadWind = (function(){
-		var $data_time = $('#data_time');
 		var $loading_windspeed = $('#loading_windspeed');
 		var cb = function(data){
+			field = VectorField.read(data, true);
 			$loading_windspeed.hide();
-			if(data){
-				var date_str = data.timestamp*1000;
-				var d = new Date(date_str);
-				if(d && !isNaN(d.getDate())){
-					date_str = d.format();
-				}
-				date_str && $data_time.text(date_str);
-				field = VectorField.read(data, true);
-				initData(map);
-			}
+			initData(map);
 		}
 		var _loadwind = _getAjax(function(){
 			return 'http://10.14.85.116/php/wind/data.php?_name=micapsdata&vti='+getType()+'&type=1000';
 		});
+		// var _loadwind = function(cb){
+		// 	$.getJSON('http://10.14.85.116/git_project/earth/public/data/weather/current/current-wind-surface-level-gfs-1.0.json', function(data){
+		// 		console.log(data);
+		// 		var d = data[1];
+		// 		var f = d.header;
+		// 		cb({
+		// 			field: d.data,
+		// 			gridHeight: f.ny,
+		// 			gridWidth: f.nx,
+		// 			timestamp: 1434326400
+		// 			x0: f.lo1,
+		// 			x1: f.lo2,
+		// 			y0: f.la2,
+		// 			y1: f.la1
+		// 		});
+		// 	});
+		// }
 		return function(){
 			$loading_windspeed.show();
 			_loadwind(cb);
+			// cb(windData);
 		}
 	})();
 	global.loadWindSpeed = _getAjax(function(lon, lat, callback){

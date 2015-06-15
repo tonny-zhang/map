@@ -1,12 +1,12 @@
-var windData = {
-timestamp: "8:36 pm on December 21, 2014",
-x0: -178.875,
-y0: -90,
-x1: 180,
-y1: 90,
-gridWidth: 320,
-gridHeight: 161,
-field: [
+{
+"timestamp": "8:36 pm on December 21, 2014",
+"x0": -178.875,
+"y0": -90,
+"x1": 180,
+"y1": 90,
+"gridWidth": 320,
+"gridHeight": 161,
+"field": [
 -1.2,2.7,
 0,-2.3,
 0.1,-3.1,
@@ -51526,6 +51526,4 @@ field: [
 -1.6,-1.3,
 -4.8,-1.6,
 -7.6,-0.9,
-6.8,0.6,
-]
-}
+6.8,0.6]}
