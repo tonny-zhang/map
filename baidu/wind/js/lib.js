@@ -1331,7 +1331,7 @@
 	BMapProjection.prototype.invert = function(x, y) {
 		var map = this.map;
 		var point = map.pixelToPoint(new BMap.Pixel(x,y));
-		return new Vector(point.lng,point.lat);
+		return new Vector(point.lng, point.lat);
 	}
 	function isAnimating() {
 		return true;
@@ -1341,7 +1341,7 @@
 	
 	var field,// = VectorField.read(windData, true),
 		render_delay = 40,
-		numParticles = 5000; // slowwwww browsers; 3500
+		numParticles = 3000; // slowwwww browsers; 3500
 	var mapAnimator;
 	function initData(map){
 		if(!field){
@@ -1374,7 +1374,7 @@
 	    
 	    var scale = Math.pow(2,map.getZoom() - 4);
 	    
-	    var display = new MotionDisplay(canvas, imageCanvas, new_field, numParticles, map_projection);
+	    var display = new MotionDisplay(canvas, imageCanvas, new_field, Math.min(numParticles, numParticles*width/1000, numParticles*height/800), map_projection);
 	 	mapAnimator = new Animator();
 	 	mapAnimator.zoom = scale;
 	 	mapAnimator.animFunc = isAnimating
@@ -1427,11 +1427,11 @@
 	    		}
 	    	}
 	    }
-	    var λ0, φ0, Δλ, Δφ;
+	    var λ0, φ0, Δλ, Δφ, dH;
 	    function _interpolate(λ, φ) {
-            // var i = _floorMod(λ - λ0, 360) / Δλ;  // calculate longitude index in wrapped range [0, 360)
-            var i = (λ - λ0) / Δλ;
-            var j = (φ0 - φ) / Δφ;                 // calculate latitude index in direction +90 to -90
+            var i = _floorMod(λ - λ0, 360) / Δλ;  // calculate longitude index in wrapped range [0, 360)
+            // var i = (λ - λ0) / Δλ;
+            var j = dH - (φ0 - φ) / Δφ;                 // calculate latitude index in direction +90 to -90
 
             //         1      2           After converting λ and φ to fractional grid indexes i and j, we find the
             //        fi  i   ci          four points "G" that enclose point (i, j). These points are at the four
@@ -1445,7 +1445,6 @@
             var fi = Math.floor(i), ci = fi + 1;
             var fj = Math.floor(j), cj = fj + 1;
 
-
             var column;
             if((column = _grid[fi])){
             	var g00 = column[fj],
@@ -1458,39 +1457,12 @@
                 	if (_isValue(g10) && _isValue(g11)) {
                 		g10 = _translat(g10);
 	                    g11 = _translat(g11);
-	                    return _bilinearInterpolateVector(i - fi, j - fj, g00, g10, g01, g11);
+	                    var return_val = _bilinearInterpolateVector(i - fi, j - fj, g00, g10, g01, g11);
+	                    return return_val;
                 	}	
             	}
             }
 
-
-            // var g00 = _getVal(fi, fj);
-            // var g10 = _getVal(fi, cj);
-            // var g01 = _getVal(ci, fj);
-            // var g11 = _getVal(ci, cj);
-            
-            // if(_isValue(g00) && _isValue(g10) && _isValue(g01) && _isValue(g11)){
-            // 	return _bilinearInterpolateVector(i - fi, j - fj, g00, g10, g01, g11);
-            // }
-            // var row;
-            // if ((row = _grid[fj])) {
-            //     var g00 = row[fi];
-            //     var g10 = row[ci];
-                
-            //     if (_isValue(g00) && _isValue(g10) && (row = _grid[cj])) {
-            //     	g00 = _translat(g00);
-            //     	g10 = _translat(g10);
-            //         var g01 = row[fi];
-            //         var g11 = row[ci];
-            //         if (_isValue(g01) && _isValue(g11)) {
-	           //          g01 = _translat(g01);
-	           //          g11 = _translat(g11);
-            //             // All four points found, so interpolate the value.
-            //             return _bilinearInterpolateVector(i - fi, j - fj, g00, g10, g01, g11);
-            //         }
-            //     }
-            // }
-            // console.log("cannot interpolate: " + λ + "," + φ + ": " + fi + " " + ci + " " + fj + " " + cj);
             return null;
         }
         function _distortion(projection, λ, φ, x, y) {
@@ -1506,10 +1478,10 @@
 	        var k = Math.cos(φ / 360 * τ);
 
 	        return [
-	            (pλ[0] - x) / hλ / k,
-	            (pλ[1] - y) / hλ / k,
-	            (pφ[0] - x) / hφ,
-	            (pφ[1] - y) / hφ
+	            (pλ.x - x) / hλ / k,
+	            (pλ.y - y) / hλ / k,
+	            (pφ.x - x) / hφ,
+	            (pφ.y - y) / hφ
 	        ];
 	    }
         function _distort(projection, λ, φ, x, y, scale, wind) {
@@ -1546,6 +1518,7 @@
 	            return [Math.floor(r + i * Δr), Math.floor(g + i * Δg), Math.floor(b + i * Δb), a];
 	        };
 	    }
+	    // console.log(_sinebowColor(1.0, 0));
 	    var _fadeToWhite = _colorInterpolator(_sinebowColor(1.0, 0), [255, 255, 255]);
 	    function _extendedSinebowColor(i, a) {
 	        return i <= BOUNDARY ?
@@ -1556,13 +1529,15 @@
 	    	return _extendedSinebowColor(Math.min(v, 100) / 100, a);
 	    }
 		return function(width, height, field, projection){
-			console.log(field);
+			// console.log(field);
 			_width = width;
 			_height = height;
 			_grid = field.field;
+			dH = field.h;
 			λ0 = field.x0, φ0 = field.y1;
-			Δλ = (field.x1 - field.x0)/field.w, Δφ = (field.y1 - field.y0)/field.h;
-			var canvas = $('<canvas width='+width+' height='+height+' class="layer_vector">').css({
+			Δλ = (field.x1 - field.x0)/field.w, Δφ = (field.y1 - field.y0)/dH;
+			// console.log(λ0, φ0, Δλ, Δφ);
+			var canvas = $('<canvas width='+width+' height='+height+' class="layer_vector layer_mask">').css({
 				left: 0,
 				top: 0
 			}).appendTo($('#map .BMap_mask')).get(0);
@@ -1576,7 +1551,11 @@
 
 	        var velocityScale = 1;
 	        var step = 2;
-	        console.log(width, height);
+	        function _getColor(wind){
+	        	var MAX_WIND = 20;
+	        	var opacity = Math.min(wind[2]/MAX_WIND, 1);
+	        	return [255, 255, 255, opacity*255];
+	        }
 	        for(var x = 0;x<width;x+=step){
 	        	for(var y = 0;y<height;y+=step){
 	        		var color = TRANSPARENT_BLACK;
@@ -1586,6 +1565,9 @@
 	        		if(coord){
 	        			var λ = coord.x, φ = coord.y;
 	        			var wind = _interpolate(λ, φ);
+	        			// if(wind){
+		        		// 	color = _getColor(wind);
+		        		// }
 	        			var scalar = null;
 	        			if(wind){
 	        				wind = _distort(projection, λ, φ, x, y, velocityScale, wind);
@@ -1643,7 +1625,9 @@
 	    map.addEventListener("dragstart", dragendOrZoomstart);
 	    map.addEventListener("zoomstart", dragendOrZoomstart);
 	    var canvasOverlay;
+	    var tt_dragend;
 	    function dragendOrZoomend(){
+	    	clearTimeout(tt_dragend);
 	    	// console.log('end');
 	        initData(map);
 	    }
@@ -1653,7 +1637,19 @@
 	    		mapAnimator.stop();
 	    	}
 	    	$map.find('.layer_vector').remove();
+	    	clearTimeout(tt_dragend);
+	    	tt_dragend = setTimeout(function(){
+	    		dragendOrZoomend();
+	    	}, 500);
 	    }
+	    var tt_resize;
+	    $(window).on('resize', function(){
+	    	dragendOrZoomstart();
+	    	clearTimeout(tt_resize);
+	    	tt_resize = setTimeout(function(){
+	    		dragendOrZoomend();
+	    	}, 10);
+	    });
 
 		map.setMapStyle({
 			styleJson: 
@@ -1758,6 +1754,7 @@
 				},
 				error: function(e){
 					console.log(arguments);
+					alert('数据加载出现错误，请重试！');
 				}
 			});
 			$ajax.date = ajax_date = date;
@@ -1773,9 +1770,27 @@
 		var _loadwind = _getAjax(function(){
 			return 'http://10.14.85.116/php/wind/data.php?_name=micapsdata&vti='+getType()+'&type=1000';
 		});
+		// var _loadwind = function(cb){
+		// 	$.getJSON('http://10.14.85.116/git_project/earth/public/data/weather/current/current-wind-surface-level-gfs-1.0.json', function(data){
+		// 		console.log(data);
+		// 		var d = data[1];
+		// 		var f = d.header;
+		// 		cb({
+		// 			field: d.data,
+		// 			gridHeight: f.ny,
+		// 			gridWidth: f.nx,
+		// 			timestamp: 1434326400
+		// 			x0: f.lo1,
+		// 			x1: f.lo2,
+		// 			y0: f.la2,
+		// 			y1: f.la1
+		// 		});
+		// 	});
+		// }
 		return function(){
 			$loading_windspeed.show();
 			_loadwind(cb);
+			// cb(windData);
 		}
 	})();
 	global.loadWindSpeed = _getAjax(function(lon, lat, callback){
