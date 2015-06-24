@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	  	<title>风流场展示</title>
+	  	<link rel="stylesheet" type="text/css" href="./css/index.css" />
+	</head>
+	<body>
+		<div class="preload">
+			<img src="img/windmill_fan.png"/>
+			<img src="img/windmill_tower.png"/>
+		</div>
+		<div id="top_nav">
+			<img src="img/logo.png"/>
+			<div id="progress"></div>
+		</div>
+		<div id="logo_huafeng">
+		</div>
+		<div id="data_time"></div>
+		<div class="loading" id="loading_windspeed"></div>
+		<div id="chart_container">
+			<div id="address"></div>
+			<a class="btn_close" href="javascript:;"></a>
+			<div class="nav">
+				<h3 class="first on">未来24小时风速预报</h3>
+				<span>|</span>
+				<h3 class="second">未来三天空气污染气象条件</h3>
+			</div>
+			<div class="module_container">
+				<div class="module_move">
+					<div class="module wind_chart">
+						<div id="chart" class="c">
+						</div>
+					</div>
+					<div class="module air">
+						<div class="c">
+							<div class="icon"></div>
+							<div class="legend_c clear">
+								<div id="air_time"></div>
+								<ul class="legend"></ul>
+							</div>
+							<div class="desc_air"></div>
+							<div class="day_c">
+								<div class="arrow animate"></div>
+								<ul class="day clear"></ul>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div id="map"></div>
+		<!-- <div id="callout"></div> -->
+		<script type="text/javascript" src="http://i.tq121.com.cn/j/jquery-1.8.2.js"></script>
+		<script charset="utf-8" src="http://map.qq.com/api/js?v=2.exp"></script>
+		<script type="text/javascript" src="js/lib.js"></script>
+		<script type="text/javascript" src="js/echarts.js"></script>
+		<script type="text/javascript" src="js/index.js"></script>
+	</body>
+</html>

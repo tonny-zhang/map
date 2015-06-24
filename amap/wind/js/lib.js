@@ -1,88 +1,6 @@
 var log = typeof console != 'undefined'?function(){
 	console.log.apply(console, arguments);
 }: function(){};
-
-var getWindColor = (function(){
-	var opacity = 0.5;
-	var conf = [{
-		a: -10,
-		b: 0,
-		c: [255, 255, 255, 0]
-	},{
-		a: 0,
-		b: 8.49,
-		c: [152, 219, 248, 0.1]
-	},{
-		a: 8.49,
-		b: 15.79,
-		c: [50, 100, 255, opacity]
-	},{
-		a: 15.79,
-		b: 30,
-		c: [254, 0, 3, opacity]
-	},{
-		a: 30,
-		b: 70,
-		c: [209, 103, 211, opacity]
-	},{
-		a: 70,
-		b: 90,
-		c: [238, 200, 239, opacity]
-	},{
-		a: 90,
-		b: 100,
-		c: [255, 255, 255, opacity]
-	}];
-	// var conf = [{
-	// 	a: -10,
-	// 	b: 8.49,
-	// 	c: [0, 0, 255, 0]
-	// },{
-	// 	a: 8.49,
-	// 	b: 20,
-	// 	c: [255, 0, 0, 0.8]
-	// }];
-	var len = conf.length;
-	return function(wind_vector, is_wind_pow, is_return_arr){
-		var wind_pow = is_wind_pow? wind_vector: Math.sqrt(Math.pow(wind_vector.x, 2) + Math.pow(wind_vector.y, 2));
-		var conf_item = conf[len - 1],
-			conf_item_prev;
-		for(var i = 0; i<len; i++){
-			var item = conf[i];
-			if(wind_pow >= item['a'] && wind_pow < item['b']){
-				conf_item = item;
-				conf_item_prev = conf[i-1];
-				break;
-			}
-		}
-		if(!conf_item_prev){
-			return is_return_arr? [255,255,255,0]: 'rgba(255,255,255,0)';
-		}
-		// if(is_return_arr){
-		// 	conf_item['c'][3] = Math.floor(conf_item['c'][3]*255)
-		// }
-		// return is_return_arr? conf_item['c']: 'rgba('+(conf_item['c'])+')';
-		var c1 = conf_item_prev['c'],
-			c2 = conf_item['c'];
-		var r1 = c1[0],
-			g1 = c1[1],
-			b1 = c1[2],
-			a1 = c1[3],
-			r2 = c2[0],
-			g2 = c2[1],
-			b2 = c2[2],
-			a2 = c2[3];
-
-		var p = (wind_pow - conf_item['a'])/(conf_item['b'] - conf_item['a']);
-		var r = Math.floor(r1 + (r2 - r1)*p),
-			g = Math.floor(g1 + (g2 - g1)*p),
-			b = Math.floor(b1 + (b2 - b1)*p),
-			a = a1 + (a2 - a1)*p;
-			// console.log('rgba('+([r%255, g%255, b%255, a%255])+')');
-		return is_return_arr? [r, g, b, Math.floor(a*255)]:'rgba('+([r, g, b, a])+')';
-	}
-})();
-
 /*时间格式化*/
 Date.prototype.format = function(format,is_not_second){
 	format || (format = 'yyyy-MM-dd hh:mm:ss');
@@ -834,7 +752,7 @@ Date.prototype.format = function(format,is_not_second){
 		} else {
 			g.fillStyle = this.backgroundAlpha;
 		}
-		g.fillStyle = 'rgba(40, 40, 40, 0.95)';//控制尾巴的长短和粗细
+		g.fillStyle = 'rgba(40, 40, 40, 0.95)';
 		var dx = animator.dx;
 		var dy = animator.dy;
 		var scale = animator.scale;
@@ -849,7 +767,7 @@ Date.prototype.format = function(format,is_not_second){
 		
 		var proj = new Vector(0, 0);
 		var val = new Vector(0, 0);
-		g.lineWidth = 0.9;
+		g.lineWidth = 1;
 		for (var i = 0; i < this.particles.length; i++) {
 			var p = this.particles[i];
 			// p.x = 106.65410385127255;
@@ -873,9 +791,9 @@ Date.prototype.format = function(format,is_not_second){
 			
 			if (p.oldX != -1) { //not new
 				var wind = this.field.getValue(p.x, p.y, val);
-				// var s = wind.length() / this.maxLength;
-				// var _color = getWindColor(wind);
-				// var t = Math.floor(290 * (1 - s)) - 45;
+				var s = wind.length() / this.maxLength;
+
+				var t = Math.floor(290 * (1 - s)) - 45;
 				// if(t < 210){
 					// var cha_x = proj.x-p.oldX;
 					// var angle = 0;
@@ -899,11 +817,11 @@ Date.prototype.format = function(format,is_not_second){
 
 					// var per = Math.min(Math.ceil(s * 255),100);
 					// t = 200;
-					// var _color = "hsl(" + (t) + ", 70%, 50%)";
+					var _color = "hsl(" + (t) + ", 70%, 50%)";
 					// var _color = "hsl(84, 228, "+(t*0.5)+")";
 					// var _color = 'rgb(0,'+Math.ceil(s * 255)+',0)';
 					// g.shadowColor = _color;
-					// g.strokeStyle = _color;
+					g.strokeStyle = _color;
 					g.strokeStyle = '#ccc';
 					g.beginPath();
 					g.moveTo(proj.x, proj.y);
@@ -1025,9 +943,10 @@ Date.prototype.format = function(format,is_not_second){
 	}
 	BMapProjection.prototype.project = function(lon, lat, opt_result){
 		var map = this.map;
-		var pixel = map.pointToPixel(new BMap.Point(lon, lat) );
-		var x = pixel.x,
-			y = pixel.y;
+		// var pixel = map.pointToPixel(new BMap.Point(lon, lat) );
+		var pixel = map.lngLatToContainer(new AMap.LngLat(lon, lat), map.getZoom());
+		var x = pixel.getX(),
+			y = pixel.getY();
 		if (opt_result) {
 			opt_result.x = x;
 			opt_result.y = y;
@@ -1037,8 +956,8 @@ Date.prototype.format = function(format,is_not_second){
 	}
 	BMapProjection.prototype.invert = function(x, y) {
 		var map = this.map;
-		var point = map.pixelToPoint(new BMap.Pixel(x,y));
-		return new Vector(point.lng, point.lat);
+		var point = map.containerToLngLat(new AMap.Pixel(x, y), map.getZoom());//pixelToPoint(new BMap.Pixel(x,y));
+		return new Vector(point.getLng(), point.getLat());
 	}
 	function isAnimating() {
 		return true;
@@ -1058,16 +977,16 @@ Date.prototype.format = function(format,is_not_second){
 		var bounds = map.getBounds(),
 			sw_point = bounds.getSouthWest(),
 			ne_point = bounds.getNorthEast(),
-			sw = map.pointToPixel(sw_point),
-			ne = map.pointToPixel(ne_point);
-		var x = sw.x,
-			y = ne.y,
+			sw = map.lngLatToContainer(sw_point, map.getZoom()),
+			ne = map.lngLatToContainer(ne_point, map.getZoom());
+		var x = sw.getX(),
+			y = ne.getY(),
 			size = map.getSize(),
 			width = size.width,
 			height = size.height;
 
 		
-		var new_field = VectorField.split(field,sw_point.lng,ne_point.lat,ne_point.lng,sw_point.lat);
+		var new_field = VectorField.split(field, sw_point.getLng(), ne_point.getLat(), ne_point.getLng(), sw_point.getLat());
 		
 
 		var map_projection = new BMapProjection(map);
@@ -1075,7 +994,7 @@ Date.prototype.format = function(format,is_not_second){
 			var canvas = $('<canvas width='+width+' height='+height+' class="layer_vector">').css({
 				left: 0,
 				top: 0
-			}).appendTo($('#map .BMap_mask')).get(0);
+			}).appendTo($container_layer).get(0);
 			var ctx = canvas.getContext('2d');
 			var imageCanvas = canvas;
 	    
@@ -1242,18 +1161,7 @@ Date.prototype.format = function(format,is_not_second){
 	    var $progress = $('#progress');
 	    var tt_run;
 	    var tt_run_arr = [];
-
-	   	var is_add_click = false;
 		return function(width, height, field, projection, cb){
-			// if(!is_add_click){
-			// 	 map.addEventListener("mousemove", function(e){console.log(e);
-			//     	var p = e.point;
-			//     	var wind = _interpolate(p.lng, p.lat);
-			    	
-			//     	console.log(wind);
-			//     });
-			// 	is_add_click = true;
-			// }
 			var time_create_mask = 0,
 				date_create_mask = new Date();
 			// log(field);
@@ -1267,7 +1175,7 @@ Date.prototype.format = function(format,is_not_second){
 			var canvas = $('<canvas width='+width+' height='+height+' class="layer_vector layer_mask">').css({
 				left: 0,
 				top: 0
-			}).appendTo($('#map .BMap_mask')).get(0);
+			}).appendTo($container_layer).get(0);
 			var ctx = canvas.getContext('2d');
 			ctx.fillStyle = "rgba(255, 0, 0, 1)";
 	        ctx.fill();
@@ -1299,21 +1207,20 @@ Date.prototype.format = function(format,is_not_second){
 	        			var date_interpolate = new Date();
 	        			var λ = coord.x, φ = coord.y;
 	        			var wind = _interpolate(λ, φ);
-	        			if(wind){
-		        			color = getWindColor(wind[2], 1, 1);
-		        			// console.log(x, y, wind, JSON.stringify(color));
-		        		}
-	        			// var scalar = null;
 	        			// if(wind){
-	        			// 	// wind = _distort(projection, λ, φ, x, y, velocityScale, wind);
-	        			// 	scalar = wind[2];
-	        			// }
-	        			// time_interpolate += (new Date() - date_interpolate);
-	        			// if(_isValue(scalar)){
-	        			// 	var date_color = new Date();
-	        			// 	color = _gradient(scalar, OVERLAY_ALPHA);
-	        			// 	time_color += (new Date() - date_color);
-	        			// }
+		        		// 	color = _getColor(wind);
+		        		// }
+	        			var scalar = null;
+	        			if(wind){
+	        				// wind = _distort(projection, λ, φ, x, y, velocityScale, wind);
+	        				scalar = wind[2];
+	        			}
+	        			time_interpolate += (new Date() - date_interpolate);
+	        			if(_isValue(scalar)){
+	        				var date_color = new Date();
+	        				color = _gradient(scalar, OVERLAY_ALPHA);
+	        				time_color += (new Date() - date_color);
+	        			}
 	        		}
 
 	        		if(color != TRANSPARENT_BLACK){
@@ -1348,34 +1255,6 @@ Date.prototype.format = function(format,is_not_second){
 
 	        		cb && cb();
 	        	}
-
-
-	        	// var p = (width-x)/width*100;
-	        	// p = p.toFixed(1);
-	        	// $progress.text(p+'%', x);
-	        	// // if(--dealingNum == 0){
-	        	// // 	ctx.putImageData(imageData, 0, 0);
-	        	// // 	log('create mask');
-	        	// // }
-	        	// clearTimeout(tt_run);
-	        	// if(--dealingNum > 0){
-	        	// 	tt_run = setTimeout(function(){
-	        	// 		setY(x-step);
-	        	// 	}, 0);
-	        	// }else{
-	        	// 	var date_putdata = new Date();
-	        	// 	ctx.putImageData(imageData, 0, 0);
-	        	// 	$progress.text('');
-
-	        	// 	log('time_invert = '+time_invert);
-	        	// 	log('time_interpolate = '+time_interpolate);
-	        	// 	log('time_color = '+time_color);
-	        	// 	log('time_set = '+time_set);
-	        	// 	log('time_putdata = '+(new Date() - date_putdata));
-	        	// 	log('time_create_mask = '+(new Date() - date_create_mask));
-
-	        	// 	cb && cb();
-	        	// }
 	        }
 	        var runningNum = width;
 	        setY(runningNum-step);
@@ -1397,46 +1276,25 @@ Date.prototype.format = function(format,is_not_second){
 		}
 	})();
 	
+	var $map = $('#map');
+	var $container_layer;
 	function initMap(){
-		var $map = $('#map');
-		// var map = new BMap.Map("map");
-		var tileLayer = new BMap.TileLayer,
-			map_url = 'http://map.yuce.baidu.com/tile4/?qt=tile&udt=20141224';
-		tileLayer.getTilesUrl = function(t, e) {
-			var o = map_url + "&x=" + t.x + "&y=" + t.y + "&z=" + e + "&styles=pl";
-			return o;
-		};
-		// var map_type = new BMap.MapType("地图类型", tileLayer);
-		// var map = new BMap.Map("map", {
-		// 	enable3DBuilding: !1,
-		// 	vectorMapLevel: 99,
-		// 	enableMapClick: false,
-		// 	mapType: map_type
-		// });
-
-		var map = new BMap.Map("map", {
-			// mapType: BMAP_HYBRID_MAP
+		var map = new AMap.Map("map", {
+			view: new AMap.View2D({
+				center: new AMap.LngLat(104.408836,34.899005),
+				zoom: 5
+			}),
+			// layers: [new AMap.TileLayer.Satellite()]
 		});
-
+		// map.addLayer(new AMap.TileLayer({
+		// 	titleUrl: 'http://webst01.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=6&x=[x]&y=[y]&z=[z]'
+		// }));
+		$container_layer = $('.amap-layers');
+		AMap.event.addListener(map, 'dragstart', dragendOrZoomstart);
+		AMap.event.addListener(map, 'zoomstart', dragendOrZoomstart);
+		AMap.event.addListener(map, 'dragend', dragendOrZoomend);
+		AMap.event.addListener(map, 'zoomend', dragendOrZoomend);
 		global.map = map;
-	    var currentZoom = 5;
-	    // map.setMinZoom(4);
-	    map.setMaxZoom(9);
-	    map.disableInertialDragging();
-	    map.enableScrollWheelZoom();    //启用滚轮放大缩小，默认禁用
-	    map.enableContinuousZoom();    //启用地图惯性拖拽，默认禁用
-	    map.enableScrollWheelZoom(true);
-	    map.enablePinchToZoom();
-	    // map.centerAndZoom(new BMap.Point(104.408836,34.899005), currentZoom);
-	    map.centerAndZoom(new BMap.Point(142.528035, 32.43799), currentZoom);
-	    map.addControl(new BMap.NavigationControl());  //添加默认缩放平移控件
-	    map.addControl(new BMap.ScaleControl());                    // 添加默认比例尺控件
-	    // map.addControl(new BMap.MapTypeControl({mapTypes: [BMAP_NORMAL_MAP,BMAP_HYBRID_MAP]}));     //2D图，卫星图
-	    map.addControl(new BMap.MapTypeControl({type: BMAP_MAPTYPE_CONTROL_DROPDOWN,anchor: BMAP_ANCHOR_TOP_RIGHT}));    //左上角，默认地图控件
-		map.addEventListener("dragend", dragendOrZoomend);
-	    map.addEventListener("zoomend", dragendOrZoomend);
-	    map.addEventListener("dragstart", dragendOrZoomstart);
-	    map.addEventListener("zoomstart", dragendOrZoomstart);
 
 	    var canvasOverlay;
 	    var tt_dragend;
@@ -1471,65 +1329,8 @@ Date.prototype.format = function(format,is_not_second){
 	    		dragendOrZoomend();
 	    	}, 10);
 	    });
-
-		map.setMapStyle({
-			styleJson: 
-				[
-			          {
-			                    "featureType": "land",
-			                    "elementType": "all",
-			                    "stylers": {}
-			          },
-			          {
-			                    "featureType": "land",
-			                    "elementType": "all",
-			                    "stylers": {
-			                              "color": "#1c3289"
-			                    }
-			          },
-			          {
-			                    "featureType": "boundary",
-			                    "elementType": "all",
-			                    "stylers": {
-			                              "color": "#6b9ecc"
-			                    }
-			          },
-			          {
-			                    "featureType": "road",
-			                    "elementType": "all",
-			                    "stylers": {
-			                              "visibility": "off"
-			                    }
-			          },
-			          {
-			                    "featureType": "water",
-			                    "elementType": "all",
-			                    "stylers": {
-			                              "color": "#3075c5"
-			                    }
-			          },
-			          {
-			                    "featureType": "administrative",
-			                    "elementType": "labels.text.stroke",
-			                    "stylers": {
-			                              "color": "#1c3289",
-			                              "weight": "0.1",
-			                              "visibility": "on"
-			                    }
-			          },
-			          {
-			                    "featureType": "label",
-			                    "elementType": "labels.text.fill",
-			                    "stylers": {
-			                              "color": "#ffffff",
-			                              "visibility": "on"
-			                    }
-			          }
-			]
-		});
 	}
 	initMap();
-	// initMicapsLine(map);
 
 	function getType(){
 		var hour = new Date().getHours();
