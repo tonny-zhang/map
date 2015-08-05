@@ -90,7 +90,7 @@
 			}
 			var promptFn = function(){
 				var val = prompt(fnName,JSON.stringify(param||''));
-				console.log("fnName:"+fnName+",val:"+val+",typeof(val)"+(typeof val)+"_  ,u_id:"+u_id);
+				// console.log("fnName:"+fnName+",val:"+val+",typeof(val)"+(typeof val)+"_  ,u_id:"+u_id);
 				return val;
 			}
 			if(u_id){
@@ -140,7 +140,6 @@
 	    }
 	    var geolocation = navigator.geolocation;
 	    var fn_success = function(position,type){
-	    	console.log('S'+(type||0));
             var lat = position.coords.latitude;
             var lon = position.coords.longitude;
             var geoinfo = {
@@ -228,7 +227,6 @@
 	}
 
 	var getJSONP = function(url,fn_success,fn_error){
-		console.log(url);
 		$.ajax({
             type : "get",
             url : url,
@@ -270,7 +268,6 @@
                 params[v[0]] = v[1];
             }
         }
-        console.log(JSON.stringify(params));
         return function (name,defaultVal){
         	
         	var v = params[name];
@@ -291,7 +288,7 @@
 			$('body').addClass('bg_null');
 		}
 		var init_canvas_size = function(){
-			console.log($('#hour_rain').width(),$('#hour_rain').outerWidth());
+			// console.log($('#hour_rain').width(),$('#hour_rain').outerWidth());
 			var info_width = $('#hour_rain').width(),
 				into_height = $('#hour_rain').height();
 			var width = info_width > 600?info_width-40:info_width;
@@ -472,11 +469,11 @@
 			
 			// mapObj = new AMap.Map('map',{resizeEnable: true, center: initLngLat, level: 5, touchZoom: true});
 			AMap.event.addListener(mapObj,'complete',function(){
-				console.log('map complete');
+				// console.log('map complete');
 				//在地图中添加ToolBar插件
 			    mapObj.plugin(["AMap.ToolBar"],function(){     
 			        var toolBar = new AMap.ToolBar();
-			        console.log(toolBar);
+			        // console.log(toolBar);
 			        mapObj.addControl(toolBar);    
 			    });
 			});
@@ -868,21 +865,25 @@
 		});
 		var img_type = getParam('it');
 		
-		for(var i in imgLayerConf){
-			var item = imgLayerConf[i];
-			if(img_type == i){
-				defaultSetting = i;
-				break;
-			}else{
-				var $div = $('<div><span data-type="'+i+'">'+item.name+'</span></div>').data('type',i);
-				if(item.isSelected){
-					$div.addClass('on');
+		if(img_type){
+			defaultSetting = img_type;
+		}else{
+			for(var i in imgLayerConf){
+				var item = imgLayerConf[i];
+				if(img_type == i){
 					defaultSetting = i;
+					break;
+				}else{
+					var $div = $('<div><span data-type="'+i+'">'+item.name+'</span></div>').data('type',i);
+					if(item.isSelected){
+						$div.addClass('on');
+						defaultSetting = i;
+					}
+					$tool_bar.append($div);
 				}
-				$tool_bar.append($div);
 			}
 		}
-		console.log(defaultSetting,imgLayerConf[defaultSetting].isShowJS);
+		// console.log(defaultSetting,imgLayerConf[defaultSetting].isShowJS);
 		if(imgLayerConf[defaultSetting].isShowJS){
 			$('body').removeClass('no_js');
 		}else{

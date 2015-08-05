@@ -1,0 +1,116 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>多边形的使用（添加、更新、删除）</title>
+	<style type="text/css">
+		body{
+			margin:0;
+			height:100%;
+			width:100%;
+			position:absolute;
+		}
+		#mapContainer{
+			position: absolute;
+			top:0;
+			left: 0;
+			right:0;
+			bottom:0;
+		}
+		
+		#tip{
+			position:absolute;
+			bottom: 20px;
+			right:10px;
+			
+			height:80px;
+			font-size:12px;
+		}
+		
+		#tip input[type='button']{
+			margin-top:10px;
+			height:28px;
+			line-height:28px;
+			outline:none;
+			text-align:center;
+			padding-left:5px;
+			padding-right:5px;
+			color:#FFF;
+			background-color:#0D9BF2;
+			border:0;
+			border-radius: 3px;
+			margin-top:5px;
+			margin-left:5px;
+			cursor:pointer;
+			margin-right:10px;
+		}
+	</style>
+</head>
+<body>
+	<div id="mapContainer"></div>
+	<div id="tip">  
+		<input type="button" value="添加多边形覆盖物" onClick="javascript:addPolygon()"/>  
+		<input type="button" value="隐藏多边形覆盖物" onClick="javascript:polygon.hide()"/> 
+		<input type="button" value="显示多边形覆盖物" onClick="javascript:polygon.show()"/>  
+		<input type="button" value="更新多边形覆盖物" onClick="javascript:updatePolygon()"/>  
+		<input type="button" value="删除多边形覆盖物" onClick="javascript:polygon.setMap(null)"/> 
+	</div>
+	
+	<script type="text/javascript" src="http://webapi.amap.com/maps?v=1.3&key=da15132e0fa88a1d4296f8d83cdf8957"></script>
+	<script type="text/javascript">
+	//初始化地图对象，加载地图
+	var map = new AMap.Map("mapContainer",{
+			resizeEnable: true,
+		  	view: new AMap.View2D({
+	      	center:new AMap.LngLat(116.397428,39.90923),//地图中心点
+	        zoom:13 //地图显示的缩放级别
+	    })
+	});	
+	
+	//添加多边形覆盖物
+	function addPolygon(){
+	   var polygonArr=new Array();//多边形覆盖物节点坐标数组 
+	   polygonArr.push(new AMap.LngLat("116.403322","39.920255")); 
+	   polygonArr.push(new AMap.LngLat("116.410703","39.897555")); 
+	   polygonArr.push(new AMap.LngLat("116.402292","39.892353")); 
+	   polygonArr.push(new AMap.LngLat("116.389846","39.891365")); 
+	   polygon=new AMap.Polygon({ 	
+	   path:polygonArr,//设置多边形边界路径
+	   strokeColor:"#FF33FF", //线颜色
+	   strokeOpacity:0.2, //线透明度 
+	   strokeWeight:3,    //线宽 
+	   fillColor: "#1791fc", //填充色
+	   fillOpacity: 0.35//填充透明度
+	  }); 
+	   polygon.setMap(map);
+	 }
+	 //更新多边形覆盖物，除此以外还可通过插件AMap.PolyEditor进行多边形覆盖物的更新，详情参看AMap.PolyEditor相关示例介绍
+	 function updatePolygon(){
+       var polygonArr10=new Array(); //新多边形覆盖物节点坐标数组 
+	    polygonArr10.push(new AMap.LngLat("110","30")); 
+	    polygonArr10.push(new AMap.LngLat("120","30")); 
+	    polygonArr10.push(new AMap.LngLat("120","42")); 
+	    polygonArr10.push(new AMap.LngLat("110","42")); 
+       
+	    var polygonArr2=new Array(); //新多边形覆盖物节点坐标数组 
+	    polygonArr2.push(new AMap.LngLat("116","35")); 
+	    polygonArr2.push(new AMap.LngLat("118","35")); 
+	    polygonArr2.push(new AMap.LngLat("118","39")); 
+	    polygonArr2.push(new AMap.LngLat("116","39")); 
+		
+		//新多边形覆盖物属性
+		var polygonOptions={	
+		    zIndex:10,
+		    strokeStyle:"solid",
+		    strokeColor:"#0000FF",
+		    strokeOpacity:0.8,
+		    strokeWeight:5,
+		    path: [polygonArr10, polygonArr2]
+		};
+		polygon.setOptions(polygonOptions);
+	 }
+	</script>
+</body>
+</html>						
+
+	

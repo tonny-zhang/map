@@ -163,6 +163,8 @@
             $wind_chart.addClass('data_loading');
             // console.log(current_map_point.lng, current_map_point.lat, getWind(current_map_point.lng, current_map_point.lat).length());
             loadWindSpeed(current_map_point.lng, current_map_point.lat, function(data){
+                var discript = data.discript;
+                $('#desc').text([discript[1], discript[2], discript[3]].join());
                 $wind_chart.removeClass('data_loading');
                 $wind_chart.data('flag', data? 'data': 'no_data');
                 if(!data){
@@ -171,18 +173,24 @@
                 }else{
                     $wind_chart.removeClass('no_data');
                 }
-                var date = _getTime(data.timestamp);
-                var time = date.getTime();
-                var hour = date.getHours();
-                delete data.timestamp;
                 var arr_val = [],
                     arr_time = [];
-                for(var i in data){
-                    arr_val.push(parseFloat(data[i].windspeed));
-                    var d = new Date(time);
-                    d.setHours(hour + parseInt(i));
-                    arr_time.push(d.format('MM-dd hh:00'));
-                }
+                var forecast = data.forecast;
+                $.each(forecast, function(i, v){console.log(v)
+                    arr_time.push(i%2 == 0?_getTime(v.date).format('MM-dd hh:00'):'');
+                    arr_val.push(v.speed.toFixed(1));
+                });
+                // var date = _getTime(data.timestamp);
+                // var time = date.getTime();
+                // var hour = date.getHours();
+                // delete data.timestamp;
+                
+                // for(var i in data){
+                //     arr_val.push(parseFloat(data[i].windspeed));
+                //     var d = new Date(time);
+                //     d.setHours(hour + parseInt(i));
+                //     arr_time.push(d.format('MM-dd hh:00'));
+                // }
                 var val_max = Math.max.apply(Math, arr_val);
                 var splitLineColor = 'rgba(255, 255, 255, 0.15)';
                 var option = {

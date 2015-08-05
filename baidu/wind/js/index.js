@@ -1,17 +1,17 @@
 !function(){
 	loadWind();
-	require.config({
-		packages: [
-            {
-                name: 'zrender',
-                location: '../../../git_project/zrender/src',
-                main: 'zrender'
-            }
-        ],
-        paths: {
-            echarts: '../../../git_project/echarts/build/source'
-        }
-    });
+	// require.config({
+	// 	packages: [
+ //            {
+ //                name: 'zrender',
+ //                location: '../../../git_project/zrender/src',
+ //                main: 'zrender'
+ //            }
+ //        ],
+ //        paths: {
+ //            echarts: '../../../git_project/echarts/build/source'
+ //        }
+ //    });
     var $chart_container = $('#chart_container');
     function clearData(){
     	current_map_point = null;
@@ -134,321 +134,321 @@
     
     var current_map_point;
     var $wind_chart = $('.wind_chart');
-	require([
-        'echarts',
-        'echarts/chart/line'
-    ], function (ec) {
-    	var marker;
-    	var myChart = ec.init(document.getElementById('chart'));
-    	var tt;
-    	function dragendOrZoomend(){
-    		clearTimeout(tt);
-    		tt = setTimeout(function(){
-    			if(marker && $chart_container.is(':visible')){
-    				var pos = marker.getPosition();
-    				var pixel = map.pointToPixel(pos);
-    				$chart_container.css({
-		    			left: pixel.x+15,
-		    			top: pixel.y-30
-		    		});
-    			}
-    		},100);
-    	}
-        var initWindTT;
-        function initWind(){
-            $chart_container.removeClass().show();
-            if($wind_chart.data('flag')){
-                return $wind_chart.addClass($wind_chart.data('flag'));
-            }
-            $wind_chart.addClass('data_loading');
-            // console.log(current_map_point.lng, current_map_point.lat, getWind(current_map_point.lng, current_map_point.lat).length());
-            loadWindSpeed(current_map_point.lng, current_map_point.lat, function(data){
-                $wind_chart.removeClass('data_loading');
-                $wind_chart.data('flag', data? 'data': 'no_data');
-                if(!data){
-                    $wind_chart.addClass('no_data');
-                    return;
-                }else{
-                    $wind_chart.removeClass('no_data');
-                }
-                var date = _getTime(data.timestamp);
-                var time = date.getTime();
-                var hour = date.getHours();
-                delete data.timestamp;
-                var arr_val = [],
-                    arr_time = [];
-                for(var i in data){
-                    arr_val.push(parseFloat(data[i].windspeed));
-                    var d = new Date(time);
-                    d.setHours(hour + parseInt(i));
-                    arr_time.push(d.format('MM-dd hh:00'));
-                }
-                var val_max = Math.max.apply(Math, arr_val);
-                var splitLineColor = 'rgba(255, 255, 255, 0.15)';
-                var option = {
-                    tooltip : {
-                        trigger: 'axis',
-                        backgroundColor: 'white',
-                        borderRadius : 5,
-                        textStyle: {
-                            color: '#ed415a',
-                            fontSize: 24
-                        },
-                        padding: [15, 20, 15, 20],
-                        axisPointer: {
-                            type: 'none'
-                        },
-                        formatter: function(params,ticket,callback){
-                            var param = params[0];
-                            var index = param['dataIndex'];
+	// require([
+ //        'echarts',
+ //        'echarts/chart/line'
+ //    ], function (ec) {
+ //    	var marker;
+ //    	var myChart = ec.init(document.getElementById('chart'));
+ //    	var tt;
+ //    	function dragendOrZoomend(){
+ //    		clearTimeout(tt);
+ //    		tt = setTimeout(function(){
+ //    			if(marker && $chart_container.is(':visible')){
+ //    				var pos = marker.getPosition();
+ //    				var pixel = map.pointToPixel(pos);
+ //    				$chart_container.css({
+	// 	    			left: pixel.x+15,
+	// 	    			top: pixel.y-30
+	// 	    		});
+ //    			}
+ //    		},100);
+ //    	}
+ //        var initWindTT;
+ //        function initWind(){
+ //            $chart_container.removeClass().show();
+ //            if($wind_chart.data('flag')){
+ //                return $wind_chart.addClass($wind_chart.data('flag'));
+ //            }
+ //            $wind_chart.addClass('data_loading');
+ //            // console.log(current_map_point.lng, current_map_point.lat, getWind(current_map_point.lng, current_map_point.lat).length());
+ //            loadWindSpeed(current_map_point.lng, current_map_point.lat, function(data){
+ //                $wind_chart.removeClass('data_loading');
+ //                $wind_chart.data('flag', data? 'data': 'no_data');
+ //                if(!data){
+ //                    $wind_chart.addClass('no_data');
+ //                    return;
+ //                }else{
+ //                    $wind_chart.removeClass('no_data');
+ //                }
+ //                var date = _getTime(data.timestamp);
+ //                var time = date.getTime();
+ //                var hour = date.getHours();
+ //                delete data.timestamp;
+ //                var arr_val = [],
+ //                    arr_time = [];
+ //                for(var i in data){
+ //                    arr_val.push(parseFloat(data[i].windspeed));
+ //                    var d = new Date(time);
+ //                    d.setHours(hour + parseInt(i));
+ //                    arr_time.push(d.format('MM-dd hh:00'));
+ //                }
+ //                var val_max = Math.max.apply(Math, arr_val);
+ //                var splitLineColor = 'rgba(255, 255, 255, 0.15)';
+ //                var option = {
+ //                    tooltip : {
+ //                        trigger: 'axis',
+ //                        backgroundColor: 'white',
+ //                        borderRadius : 5,
+ //                        textStyle: {
+ //                            color: '#ed415a',
+ //                            fontSize: 24
+ //                        },
+ //                        padding: [15, 20, 15, 20],
+ //                        axisPointer: {
+ //                            type: 'none'
+ //                        },
+ //                        formatter: function(params,ticket,callback){
+ //                            var param = params[0];
+ //                            var index = param['dataIndex'];
 
-                            return param[1]+'风速：'+param['value']+'米/秒';
-                        }
-                    },
-                    calculable : true,
-                    xAxis : [
-                        {
-                            type: "category",
-                            boundaryGap: !0,
-                            data: arr_time,
-                            axisLine: {
-                                show: false,
-                                lineStyle: {
-                                    color: splitLineColor
-                                }
-                            },
-                            axisTick: {
-                                show: true
-                            },
-                            axisLabel: {
-                                margin: 10,
-                                interval: 1,
-                                textStyle: {
-                                    color: 'white',
-                                    fontSize: 10,
-                                    fontWeight: "lighter"
-                                }
-                            },
-                            splitLine: {
-                                show: true,
-                                lineStyle: {
-                                    color: splitLineColor
-                                }
-                            },
-                            splitArea: {
-                                show: !1
-                            }
-                        }
-                    ],
-                    yAxis : [
-                        {
-                            type: "value",
-                            name: '风速(m/s)',
-                            min: 0,
-                            boundaryGap: false,
-                            precision: 0,
-                            axisLine: {
-                                show: false,
-                                lineStyle: {
-                                    color: splitLineColor
-                                }
-                            },
-                            axisTick: {
-                                show: true
-                            },
-                            splitArea: {
-                                show: false
-                            },
-                            scale: true,
-                            boundaryGap: [.1, .1],
-                            axisLabel: {
-                                margin: 20,
-                                textStyle: {
-                                    color: 'white'
-                                },
-                                formatter: function(a){
-                                    if(a){
-                                        a = a.toFixed(1);
-                                    }
-                                    return a;
-                                },
-                            },
-                            splitLine: {
-                                onGap: true,
-                                lineStyle: {
-                                    color: splitLineColor
-                                }
-                            }
-                        }
-                    ],
-                    grid: {
-                        x: 50,
-                        y: 50,
-                        x2: 30,
-                        y2: 70,
-                        borderWidth: 1,
-                        borderColor: splitLineColor
-                    },
-                    series : [
-                        {
-                            type: 'line',
-                            smooth: true,
-                            symbol: "circle",
-                            symbolSize: 3,
-                            showAllSymbol: !0,
-                            data: arr_val,
-                            markPoint: {
-                                data: [
-                                    {
-                                        symbol: 'circle',
-                                        symbolSize: 8,
-                                        xAxis: 0,
-                                        yAxis: arr_val[0],
-                                        itemStyle: {
-                                            normal: {
-                                                color: "white",
-                                                borderColor: "white",
-                                                borderWidth: 5
-                                            }
-                                        }
-                                    },
-                                    {
-                                        symbol: 'circle',
-                                        symbolSize: 8,
-                                        xAxis: arr_val.length-1,
-                                        yAxis: arr_val[arr_val.length-1],
-                                        itemStyle: {
-                                            normal: {
-                                                color: "white",
-                                                borderColor: "white",
-                                                borderWidth: 5
-                                            }
-                                        }
-                                    }
-                                ]
-                            },
-                            markLine: {
-                                symbol: ['circle','circle'],
-                                itemStyle: {
-                                    normal: {
-                                        color: "rgba(237,65,90,0.7)",
-                                        borderColor: "rgba(237,65,90,0.7)",
-                                        borderWidth: 4,
-                                        label: {
-                                            show: true,
-                                            formatter: function(a, b){
-                                                b = b.replace(/\s/g,'');
-                                                var space = '　　';
-                                                if(b == '1:1'){
-                                                    return space+'微风';
-                                                }else{
-                                                    return space+'强风';
-                                                }
-                                            },
-                                            textStyle: {
-                                                color: 'rgba(237,65,90,0.7)',
-                                                align: 'right'
-                                            }
-                                        },
-                                        lineStyle: {
-                                            color: 'rgba(237,65,90,0.7)',
-                                            width: 2,
-                                        }
-                                    }
-                                },
-                                data: [
-                                    [{
-                                        name: '1',
-                                        xAxis: 0,
-                                        yAxis: 5.5,
-                                    },
-                                    {
-                                        name: '1',
-                                        xAxis: arr_val.length-1,
-                                        yAxis: 5.5,
-                                    }]
-                                ]
-                            },
-                            itemStyle: {
-                                normal: {
-                                    color: "#070d29",
-                                    lineStyle: {
-                                        width: 6,
-                                        color: "white",
-                                        type: "dotted"
-                                    },
-                                    borderColor: "white",
-                                    borderWidth: 1
-                                },
-                                emphasis: {
-                                    color: "#ed415a",
-                                    borderColor: "#ed415a",
-                                    borderWidth: 10,
-                                }
-                            }
-                        }
-                    ]
-                }
-                option.yAxis[0].max = val_max + 10;
-                if(val_max > 11){
-                    option.series[0].markLine.data.push([
-                        {name: '2',
-                            xAxis: 0,
-                            yAxis: 10.8,
-                        },
-                        {name: '2',
-                            xAxis: arr_val.length-1,
-                            yAxis: 10.8,
-                        }
-                    ]);          
-                }
-                myChart.setOption(option);
-            });
-        }
-        $nav_h3.first().click(initWind);
-    	// map.addEventListener("dragend", dragendOrZoomend);
-	    // map.addEventListener("zoomend", dragendOrZoomend);
-        var geocoder = new BMap.Geocoder();
-        var $address = $('#address');
-        function _initAddress(){
-            var date = new Date();
-            $address.html('');
-            geocoder.getLocation(current_map_point, function(rs){
-                if(geocoder.date != date){
-                    return;
-                }
-                var addComp = rs.addressComponents;
-                var info_arr = [addComp.province, addComp.city, addComp.district, addComp.street, addComp.streetNumber];
-                var address = '';
-                $.each(info_arr, function(i, v){
-                    if(v && address.indexOf(v) == -1){
-                        address += v;
-                    }
-                });
-                address && $address.html('<img src="img/locate.png"/>'+address);
-                // console.log(address);
-                // alert(addComp.province + ", " + addComp.city + ", " + addComp.district + ", " + addComp.street + ", " + addComp.streetNumber);
-            });
-            geocoder.date = date;
-        }
-    	map.addEventListener("click", function(e){
-    		clearData();
-    		current_map_point = e.point;
-            _initAddress();
-    		if(!marker){
-    			marker = new BMap.Marker(current_map_point);
-    			map.addOverlay(marker);
-    		}else{
-    			marker.setPosition(current_map_point);
-    		}
+ //                            return param[1]+'风速：'+param['value']+'米/秒';
+ //                        }
+ //                    },
+ //                    calculable : true,
+ //                    xAxis : [
+ //                        {
+ //                            type: "category",
+ //                            boundaryGap: !0,
+ //                            data: arr_time,
+ //                            axisLine: {
+ //                                show: false,
+ //                                lineStyle: {
+ //                                    color: splitLineColor
+ //                                }
+ //                            },
+ //                            axisTick: {
+ //                                show: true
+ //                            },
+ //                            axisLabel: {
+ //                                margin: 10,
+ //                                interval: 1,
+ //                                textStyle: {
+ //                                    color: 'white',
+ //                                    fontSize: 10,
+ //                                    fontWeight: "lighter"
+ //                                }
+ //                            },
+ //                            splitLine: {
+ //                                show: true,
+ //                                lineStyle: {
+ //                                    color: splitLineColor
+ //                                }
+ //                            },
+ //                            splitArea: {
+ //                                show: !1
+ //                            }
+ //                        }
+ //                    ],
+ //                    yAxis : [
+ //                        {
+ //                            type: "value",
+ //                            name: '风速(m/s)',
+ //                            min: 0,
+ //                            boundaryGap: false,
+ //                            precision: 0,
+ //                            axisLine: {
+ //                                show: false,
+ //                                lineStyle: {
+ //                                    color: splitLineColor
+ //                                }
+ //                            },
+ //                            axisTick: {
+ //                                show: true
+ //                            },
+ //                            splitArea: {
+ //                                show: false
+ //                            },
+ //                            scale: true,
+ //                            boundaryGap: [.1, .1],
+ //                            axisLabel: {
+ //                                margin: 20,
+ //                                textStyle: {
+ //                                    color: 'white'
+ //                                },
+ //                                formatter: function(a){
+ //                                    if(a){
+ //                                        a = a.toFixed(1);
+ //                                    }
+ //                                    return a;
+ //                                },
+ //                            },
+ //                            splitLine: {
+ //                                onGap: true,
+ //                                lineStyle: {
+ //                                    color: splitLineColor
+ //                                }
+ //                            }
+ //                        }
+ //                    ],
+ //                    grid: {
+ //                        x: 50,
+ //                        y: 50,
+ //                        x2: 30,
+ //                        y2: 70,
+ //                        borderWidth: 1,
+ //                        borderColor: splitLineColor
+ //                    },
+ //                    series : [
+ //                        {
+ //                            type: 'line',
+ //                            smooth: true,
+ //                            symbol: "circle",
+ //                            symbolSize: 3,
+ //                            showAllSymbol: !0,
+ //                            data: arr_val,
+ //                            markPoint: {
+ //                                data: [
+ //                                    {
+ //                                        symbol: 'circle',
+ //                                        symbolSize: 8,
+ //                                        xAxis: 0,
+ //                                        yAxis: arr_val[0],
+ //                                        itemStyle: {
+ //                                            normal: {
+ //                                                color: "white",
+ //                                                borderColor: "white",
+ //                                                borderWidth: 5
+ //                                            }
+ //                                        }
+ //                                    },
+ //                                    {
+ //                                        symbol: 'circle',
+ //                                        symbolSize: 8,
+ //                                        xAxis: arr_val.length-1,
+ //                                        yAxis: arr_val[arr_val.length-1],
+ //                                        itemStyle: {
+ //                                            normal: {
+ //                                                color: "white",
+ //                                                borderColor: "white",
+ //                                                borderWidth: 5
+ //                                            }
+ //                                        }
+ //                                    }
+ //                                ]
+ //                            },
+ //                            markLine: {
+ //                                symbol: ['circle','circle'],
+ //                                itemStyle: {
+ //                                    normal: {
+ //                                        color: "rgba(237,65,90,0.7)",
+ //                                        borderColor: "rgba(237,65,90,0.7)",
+ //                                        borderWidth: 4,
+ //                                        label: {
+ //                                            show: true,
+ //                                            formatter: function(a, b){
+ //                                                b = b.replace(/\s/g,'');
+ //                                                var space = '　　';
+ //                                                if(b == '1:1'){
+ //                                                    return space+'微风';
+ //                                                }else{
+ //                                                    return space+'强风';
+ //                                                }
+ //                                            },
+ //                                            textStyle: {
+ //                                                color: 'rgba(237,65,90,0.7)',
+ //                                                align: 'right'
+ //                                            }
+ //                                        },
+ //                                        lineStyle: {
+ //                                            color: 'rgba(237,65,90,0.7)',
+ //                                            width: 2,
+ //                                        }
+ //                                    }
+ //                                },
+ //                                data: [
+ //                                    [{
+ //                                        name: '1',
+ //                                        xAxis: 0,
+ //                                        yAxis: 5.5,
+ //                                    },
+ //                                    {
+ //                                        name: '1',
+ //                                        xAxis: arr_val.length-1,
+ //                                        yAxis: 5.5,
+ //                                    }]
+ //                                ]
+ //                            },
+ //                            itemStyle: {
+ //                                normal: {
+ //                                    color: "#070d29",
+ //                                    lineStyle: {
+ //                                        width: 6,
+ //                                        color: "white",
+ //                                        type: "dotted"
+ //                                    },
+ //                                    borderColor: "white",
+ //                                    borderWidth: 1
+ //                                },
+ //                                emphasis: {
+ //                                    color: "#ed415a",
+ //                                    borderColor: "#ed415a",
+ //                                    borderWidth: 10,
+ //                                }
+ //                            }
+ //                        }
+ //                    ]
+ //                }
+ //                option.yAxis[0].max = val_max + 10;
+ //                if(val_max > 11){
+ //                    option.series[0].markLine.data.push([
+ //                        {name: '2',
+ //                            xAxis: 0,
+ //                            yAxis: 10.8,
+ //                        },
+ //                        {name: '2',
+ //                            xAxis: arr_val.length-1,
+ //                            yAxis: 10.8,
+ //                        }
+ //                    ]);          
+ //                }
+ //                myChart.setOption(option);
+ //            });
+ //        }
+ //        $nav_h3.first().click(initWind);
+ //    	// map.addEventListener("dragend", dragendOrZoomend);
+	//     // map.addEventListener("zoomend", dragendOrZoomend);
+ //        var geocoder = new BMap.Geocoder();
+ //        var $address = $('#address');
+ //        function _initAddress(){
+ //            var date = new Date();
+ //            $address.html('');
+ //            geocoder.getLocation(current_map_point, function(rs){
+ //                if(geocoder.date != date){
+ //                    return;
+ //                }
+ //                var addComp = rs.addressComponents;
+ //                var info_arr = [addComp.province, addComp.city, addComp.district, addComp.street, addComp.streetNumber];
+ //                var address = '';
+ //                $.each(info_arr, function(i, v){
+ //                    if(v && address.indexOf(v) == -1){
+ //                        address += v;
+ //                    }
+ //                });
+ //                address && $address.html('<img src="img/locate.png"/>'+address);
+ //                // console.log(address);
+ //                // alert(addComp.province + ", " + addComp.city + ", " + addComp.district + ", " + addComp.street + ", " + addComp.streetNumber);
+ //            });
+ //            geocoder.date = date;
+ //        }
+ //    	map.addEventListener("click", function(e){
+ //    		clearData();
+ //    		current_map_point = e.point;
+ //            _initAddress();
+ //    		if(!marker){
+ //    			marker = new BMap.Marker(current_map_point);
+ //    			map.addOverlay(marker);
+ //    		}else{
+ //    			marker.setPosition(current_map_point);
+ //    		}
     		
 
-            clearTimeout(initWindTT);
-            initWindTT = setTimeout(function(){
-                $nav_h3.first().click();
-            }, 100);
-			e.domEvent.preventDefault();
-    	});
-    });
+ //            clearTimeout(initWindTT);
+ //            initWindTT = setTimeout(function(){
+ //                $nav_h3.first().click();
+ //            }, 100);
+	// 		e.domEvent.preventDefault();
+ //    	});
+ //    });
 	// loadXSC();
 }();

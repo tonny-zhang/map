@@ -1,0 +1,26 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+    body,html{
+      height: 100%;
+      width: 100%;
+    }
+    </style>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css" />
+  </head>
+  <body>
+    <div id="map" style="width:100%;height:100%;"></div>
+    <script src="./lib/leaflet.js"></script>
+    <script src="./lib/proj4-compressed.js"></script>
+    <script src="./lib/proj4leaflet.js"></script>
+    <script>
+    var map = L.map('map', {center: [39.929, 116.388],zoom: 5}); 
+    
+    L.tileLayer('http://api.tiles.mapbox.com/v4/ludawei.mn69agep/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibHVkYXdlaSIsImEiOiJldzV1SVIwIn0.-gaUYss5MkQMyem_IOskdA').addTo(map);
+
+    </script>
+  </body>
+</html>

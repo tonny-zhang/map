@@ -1094,308 +1094,311 @@ Date.prototype.format = function(format,is_not_second){
 		// initDisplay();
 		
 	}
-	var _createMask = (function(){
-		var TRANSPARENT_BLACK = [0, 0, 0, 0]; 		// singleton 0 rgba
-		var OVERLAY_ALPHA = Math.floor(0.4*255);  	// overlay transparency (on scale [0, 255])
-		var data, _width, _height, _grid;
-		var _isVisible = function(x, y) {
-            var i = (y * _width + x) * 4;
-            return data[i + 3] > 0;  // non-zero alpha means pixel is visible
-        }
-        var _set = function(x, y, rgba){
-        	var i = (y * _width + x) * 4;
-            data[i    ] = rgba[0];
-            data[i + 1] = rgba[1];
-            data[i + 2] = rgba[2];
-            data[i + 3] = rgba[3];
-        }
-        function _bilinearInterpolateVector(x, y, g00, g10, g01, g11) {
-	        var rx = (1 - x);
-	        var ry = (1 - y);
-	        var a = rx * ry,  b = x * ry,  c = rx * y,  d = x * y;
-	        var u = g00[0] * a + g10[0] * b + g01[0] * c + g11[0] * d;
-	        var v = g00[1] * a + g10[1] * b + g01[1] * c + g11[1] * d;
-	        return [u, v, Math.sqrt(u * u + v * v)];
-	    }
-	    function _floorMod(a, n) {
-	        var f = a - n * Math.floor(a / n);
-	        // HACK: when a is extremely close to an n transition, f can be equal to n. This is bad because f must be
-	        //       within range [0, n). Check for this corner case. Example: a:=-1e-16, n:=10. What is the proper fix?
-	        return f === n ? 0 : f;
-	    }
-	    function _isValue(x) {
-	        return x !== null && x !== undefined;
-	    }
-	    function _translat(g){
-	    	return [g.x, g.y];
-	    }
-	    function _getVal(i, j){
-	    	var row = _grid[i];
-	    	if(_isValue(row)){
-	    		var column = row[j];
-	    		if(_isValue(column)){
-	    			return _translat(column);
-	    		}
-	    	}
-	    }
-	    var λ0, φ0, Δλ, Δφ, dH;
-	    function _interpolate(λ, φ) {
-            var i = _floorMod(λ - λ0, 360) / Δλ;  // calculate longitude index in wrapped range [0, 360)
-            // var i = (λ - λ0) / Δλ;
-            var j = dH - (φ0 - φ) / Δφ;                 // calculate latitude index in direction +90 to -90
+	function _createMask(width, height, field, projection, cb){
+		cb && cb();
+	};
+	// var _createMask = (function(){
+	// 	var TRANSPARENT_BLACK = [0, 0, 0, 0]; 		// singleton 0 rgba
+	// 	var OVERLAY_ALPHA = Math.floor(0.4*255);  	// overlay transparency (on scale [0, 255])
+	// 	var data, _width, _height, _grid;
+	// 	var _isVisible = function(x, y) {
+ //            var i = (y * _width + x) * 4;
+ //            return data[i + 3] > 0;  // non-zero alpha means pixel is visible
+ //        }
+ //        var _set = function(x, y, rgba){
+ //        	var i = (y * _width + x) * 4;
+ //            data[i    ] = rgba[0];
+ //            data[i + 1] = rgba[1];
+ //            data[i + 2] = rgba[2];
+ //            data[i + 3] = rgba[3];
+ //        }
+ //        function _bilinearInterpolateVector(x, y, g00, g10, g01, g11) {
+	//         var rx = (1 - x);
+	//         var ry = (1 - y);
+	//         var a = rx * ry,  b = x * ry,  c = rx * y,  d = x * y;
+	//         var u = g00[0] * a + g10[0] * b + g01[0] * c + g11[0] * d;
+	//         var v = g00[1] * a + g10[1] * b + g01[1] * c + g11[1] * d;
+	//         return [u, v, Math.sqrt(u * u + v * v)];
+	//     }
+	//     function _floorMod(a, n) {
+	//         var f = a - n * Math.floor(a / n);
+	//         // HACK: when a is extremely close to an n transition, f can be equal to n. This is bad because f must be
+	//         //       within range [0, n). Check for this corner case. Example: a:=-1e-16, n:=10. What is the proper fix?
+	//         return f === n ? 0 : f;
+	//     }
+	//     function _isValue(x) {
+	//         return x !== null && x !== undefined;
+	//     }
+	//     function _translat(g){
+	//     	return [g.x, g.y];
+	//     }
+	//     function _getVal(i, j){
+	//     	var row = _grid[i];
+	//     	if(_isValue(row)){
+	//     		var column = row[j];
+	//     		if(_isValue(column)){
+	//     			return _translat(column);
+	//     		}
+	//     	}
+	//     }
+	//     var λ0, φ0, Δλ, Δφ, dH;
+	//     function _interpolate(λ, φ) {
+ //            var i = _floorMod(λ - λ0, 360) / Δλ;  // calculate longitude index in wrapped range [0, 360)
+ //            // var i = (λ - λ0) / Δλ;
+ //            var j = dH - (φ0 - φ) / Δφ;                 // calculate latitude index in direction +90 to -90
 
-            //         1      2           After converting λ and φ to fractional grid indexes i and j, we find the
-            //        fi  i   ci          four points "G" that enclose point (i, j). These points are at the four
-            //         | =1.4 |           corners specified by the floor and ceiling of i and j. For example, given
-            //      ---G--|---G--- fj 8   i = 1.4 and j = 8.3, the four surrounding grid points are (1, 8), (2, 8),
-            //    j ___|_ .   |           (1, 9) and (2, 9).
-            //  =8.3   |      |
-            //      ---G------G--- cj 9   Note that for wrapped grids, the first column is duplicated as the last
-            //         |      |           column, so the index ci can be used without taking a modulo.
+ //            //         1      2           After converting λ and φ to fractional grid indexes i and j, we find the
+ //            //        fi  i   ci          four points "G" that enclose point (i, j). These points are at the four
+ //            //         | =1.4 |           corners specified by the floor and ceiling of i and j. For example, given
+ //            //      ---G--|---G--- fj 8   i = 1.4 and j = 8.3, the four surrounding grid points are (1, 8), (2, 8),
+ //            //    j ___|_ .   |           (1, 9) and (2, 9).
+ //            //  =8.3   |      |
+ //            //      ---G------G--- cj 9   Note that for wrapped grids, the first column is duplicated as the last
+ //            //         |      |           column, so the index ci can be used without taking a modulo.
 
-            var fi = Math.floor(i), ci = fi + 1;
-            var fj = Math.floor(j), cj = fj + 1;
+ //            var fi = Math.floor(i), ci = fi + 1;
+ //            var fj = Math.floor(j), cj = fj + 1;
 
-            var column;
-            if((column = _grid[fi])){
-            	var g00 = column[fj],
-            		g01 = column[cj];
-            	if(_isValue(g00) && _isValue(g01) && (column = _grid[ci])){
-            		g00 = _translat(g00);
-                	g01 = _translat(g01);
-                	var g10 = column[fj],
-                		g11 = column[cj];
-                	if (_isValue(g10) && _isValue(g11)) {
-                		g10 = _translat(g10);
-	                    g11 = _translat(g11);
-	                    var return_val = _bilinearInterpolateVector(i - fi, j - fj, g00, g10, g01, g11);
-	                    return return_val;
-                	}	
-            	}
-            }
+ //            var column;
+ //            if((column = _grid[fi])){
+ //            	var g00 = column[fj],
+ //            		g01 = column[cj];
+ //            	if(_isValue(g00) && _isValue(g01) && (column = _grid[ci])){
+ //            		g00 = _translat(g00);
+ //                	g01 = _translat(g01);
+ //                	var g10 = column[fj],
+ //                		g11 = column[cj];
+ //                	if (_isValue(g10) && _isValue(g11)) {
+ //                		g10 = _translat(g10);
+	//                     g11 = _translat(g11);
+	//                     var return_val = _bilinearInterpolateVector(i - fi, j - fj, g00, g10, g01, g11);
+	//                     return return_val;
+ //                	}	
+ //            	}
+ //            }
 
-            return null;
-        }
-        function _distortion(projection, λ, φ, x, y) {
-	        var hλ = λ < 0 ? H : -H;
-	        var hφ = φ < 0 ? H : -H;
-	        // var pλ = projection([λ + hλ, φ]);
-	        // var pφ = projection([λ, φ + hφ]);
-	        var pλ = projection.project(λ + hλ, φ);
-	        var pφ = projection.project(λ, φ + hφ);
+ //            return null;
+ //        }
+ //        function _distortion(projection, λ, φ, x, y) {
+	//         var hλ = λ < 0 ? H : -H;
+	//         var hφ = φ < 0 ? H : -H;
+	//         // var pλ = projection([λ + hλ, φ]);
+	//         // var pφ = projection([λ, φ + hφ]);
+	//         var pλ = projection.project(λ + hλ, φ);
+	//         var pφ = projection.project(λ, φ + hφ);
 
-	        // Meridian scale factor (see Snyder, equation 4-3), where R = 1. This handles issue where length of 1° λ
-	        // changes depending on φ. Without this, there is a pinching effect at the poles.
-	        var k = Math.cos(φ / 360 * τ);
+	//         // Meridian scale factor (see Snyder, equation 4-3), where R = 1. This handles issue where length of 1° λ
+	//         // changes depending on φ. Without this, there is a pinching effect at the poles.
+	//         var k = Math.cos(φ / 360 * τ);
 
-	        return [
-	            (pλ.x - x) / hλ / k,
-	            (pλ.y - y) / hλ / k,
-	            (pφ.x - x) / hφ,
-	            (pφ.y - y) / hφ
-	        ];
-	    }
-        function _distort(projection, λ, φ, x, y, scale, wind) {
-	        var u = wind[0] * scale;
-	        var v = wind[1] * scale;
-	        var d = _distortion(projection, λ, φ, x, y);
+	//         return [
+	//             (pλ.x - x) / hλ / k,
+	//             (pλ.y - y) / hλ / k,
+	//             (pφ.x - x) / hφ,
+	//             (pφ.y - y) / hφ
+	//         ];
+	//     }
+ //        function _distort(projection, λ, φ, x, y, scale, wind) {
+	//         var u = wind[0] * scale;
+	//         var v = wind[1] * scale;
+	//         var d = _distortion(projection, λ, φ, x, y);
 
-	        // Scale distortion vectors by u and v, then add.
-	        wind[0] = d[0] * u + d[2] * v;
-	        wind[1] = d[1] * u + d[3] * v;
-	        return wind;
-	    }
+	//         // Scale distortion vectors by u and v, then add.
+	//         wind[0] = d[0] * u + d[2] * v;
+	//         wind[1] = d[1] * u + d[3] * v;
+	//         return wind;
+	//     }
 
-	    var BOUNDARY = 0.45;
-	    var τ = 2 * Math.PI;
-    	var H = 0.0000360;  // 0.0000360°φ ~= 4m
-	    function _sinebowColor(hue, a) {
-	        // Map hue [0, 1] to radians [0, 5/6τ]. Don't allow a full rotation because that keeps hue == 0 and
-	        // hue == 1 from mapping to the same color.
-	        var rad = hue * τ * 5/6;
-	        rad *= 0.75;  // increase frequency to 2/3 cycle per rad
+	//     var BOUNDARY = 0.45;
+	//     var τ = 2 * Math.PI;
+ //    	var H = 0.0000360;  // 0.0000360°φ ~= 4m
+	//     function _sinebowColor(hue, a) {
+	//         // Map hue [0, 1] to radians [0, 5/6τ]. Don't allow a full rotation because that keeps hue == 0 and
+	//         // hue == 1 from mapping to the same color.
+	//         var rad = hue * τ * 5/6;
+	//         rad *= 0.75;  // increase frequency to 2/3 cycle per rad
 
-	        var s = Math.sin(rad);
-	        var c = Math.cos(rad);
-	        var r = Math.floor(Math.max(0, -c) * 255);
-	        var g = Math.floor(Math.max(s, 0) * 255);
-	        var b = Math.floor(Math.max(c, 0, -s) * 255);
-	        return [r, g, b, a];
-	    }
-	    function _colorInterpolator(start, end) {
-	        var r = start[0], g = start[1], b = start[2];
-	        var Δr = end[0] - r, Δg = end[1] - g, Δb = end[2] - b;
-	        return function(i, a) {
-	            return [Math.floor(r + i * Δr), Math.floor(g + i * Δg), Math.floor(b + i * Δb), a];
-	        };
-	    }
-	    // log(_sinebowColor(1.0, 0));
-	    var _fadeToWhite = _colorInterpolator(_sinebowColor(1.0, 0), [255, 255, 255]);
-	    function _extendedSinebowColor(i, a) {
-	        return i <= BOUNDARY ?
-	            _sinebowColor(i / BOUNDARY, a) :
-	            _fadeToWhite((i - BOUNDARY) / (1 - BOUNDARY), a);
-	    }
-	    function _gradient(v, a){
-	    	return _extendedSinebowColor(Math.min(v, 100) / 100, a);
-	    }
-	    var $progress = $('#progress');
-	    var tt_run;
-	    var tt_run_arr = [];
+	//         var s = Math.sin(rad);
+	//         var c = Math.cos(rad);
+	//         var r = Math.floor(Math.max(0, -c) * 255);
+	//         var g = Math.floor(Math.max(s, 0) * 255);
+	//         var b = Math.floor(Math.max(c, 0, -s) * 255);
+	//         return [r, g, b, a];
+	//     }
+	//     function _colorInterpolator(start, end) {
+	//         var r = start[0], g = start[1], b = start[2];
+	//         var Δr = end[0] - r, Δg = end[1] - g, Δb = end[2] - b;
+	//         return function(i, a) {
+	//             return [Math.floor(r + i * Δr), Math.floor(g + i * Δg), Math.floor(b + i * Δb), a];
+	//         };
+	//     }
+	//     // log(_sinebowColor(1.0, 0));
+	//     var _fadeToWhite = _colorInterpolator(_sinebowColor(1.0, 0), [255, 255, 255]);
+	//     function _extendedSinebowColor(i, a) {
+	//         return i <= BOUNDARY ?
+	//             _sinebowColor(i / BOUNDARY, a) :
+	//             _fadeToWhite((i - BOUNDARY) / (1 - BOUNDARY), a);
+	//     }
+	//     function _gradient(v, a){
+	//     	return _extendedSinebowColor(Math.min(v, 100) / 100, a);
+	//     }
+	//     var $progress = $('#progress');
+	//     var tt_run;
+	//     var tt_run_arr = [];
 
-	   	var is_add_click = false;
-		return function(width, height, field, projection, cb){
-			// if(!is_add_click){
-			// 	 map.addEventListener("mousemove", function(e){console.log(e);
-			//     	var p = e.point;
-			//     	var wind = _interpolate(p.lng, p.lat);
+	//    	var is_add_click = false;
+	// 	return function(width, height, field, projection, cb){
+	// 		// if(!is_add_click){
+	// 		// 	 map.addEventListener("mousemove", function(e){console.log(e);
+	// 		//     	var p = e.point;
+	// 		//     	var wind = _interpolate(p.lng, p.lat);
 			    	
-			//     	console.log(wind);
-			//     });
-			// 	is_add_click = true;
-			// }
-			var time_create_mask = 0,
-				date_create_mask = new Date();
-			// log(field);
-			_width = width;
-			_height = height;
-			_grid = field.field;
-			dH = field.h;
-			λ0 = field.x0, φ0 = field.y1;
-			Δλ = (field.x1 - field.x0)/field.w, Δφ = (field.y1 - field.y0)/dH;
-			// log(λ0, φ0, Δλ, Δφ);
-			var canvas = $('<canvas width='+width+' height='+height+' class="layer_vector layer_mask">').css({
-				left: 0,
-				top: 0
-			}).appendTo($('#map .BMap_mask')).get(0);
-			var ctx = canvas.getContext('2d');
-			ctx.fillStyle = "rgba(255, 0, 0, 1)";
-	        ctx.fill();
-	        // d3.select("#display").node().appendChild(canvas);  // make mask visible for debugging
+	// 		//     	console.log(wind);
+	// 		//     });
+	// 		// 	is_add_click = true;
+	// 		// }
+	// 		var time_create_mask = 0,
+	// 			date_create_mask = new Date();
+	// 		// log(field);
+	// 		_width = width;
+	// 		_height = height;
+	// 		_grid = field.field;
+	// 		dH = field.h;
+	// 		λ0 = field.x0, φ0 = field.y1;
+	// 		Δλ = (field.x1 - field.x0)/field.w, Δφ = (field.y1 - field.y0)/dH;
+	// 		// log(λ0, φ0, Δλ, Δφ);
+	// 		var canvas = $('<canvas width='+width+' height='+height+' class="layer_vector layer_mask">').css({
+	// 			left: 0,
+	// 			top: 0
+	// 		}).appendTo($('#map .BMap_mask')).get(0);
+	// 		var ctx = canvas.getContext('2d');
+	// 		ctx.fillStyle = "rgba(255, 0, 0, 1)";
+	//         ctx.fill();
+	//         // d3.select("#display").node().appendChild(canvas);  // make mask visible for debugging
 
-	        var imageData = ctx.getImageData(0, 0, width, height);
-	        data = imageData.data;  // layout: [r, g, b, a, r, g, b, a, ...]
+	//         var imageData = ctx.getImageData(0, 0, width, height);
+	//         data = imageData.data;  // layout: [r, g, b, a, r, g, b, a, ...]
 
-	        var velocityScale = 1;
-	        var step = 2;
-	        function _getColor(wind){
-	        	var MAX_WIND = 20;
-	        	var opacity = Math.min(wind[2]/MAX_WIND, 1);
-	        	return [255, 255, 255, opacity*255];
-	        }
-	        var time_invert = 0,
-	        	time_interpolate = 0,
-	        	time_color = 0,
-	        	time_set = 0,
-	        	time_putdata = 0;
-	        function setY(x){
-	        	for(var y = 0;y<height;y+=step){
-	        		var color = TRANSPARENT_BLACK;
+	//         var velocityScale = 1;
+	//         var step = 2;
+	//         function _getColor(wind){
+	//         	var MAX_WIND = 20;
+	//         	var opacity = Math.min(wind[2]/MAX_WIND, 1);
+	//         	return [255, 255, 255, opacity*255];
+	//         }
+	//         var time_invert = 0,
+	//         	time_interpolate = 0,
+	//         	time_color = 0,
+	//         	time_set = 0,
+	//         	time_putdata = 0;
+	//         function setY(x){
+	//         	for(var y = 0;y<height;y+=step){
+	//         		var color = TRANSPARENT_BLACK;
 	        		
-	        		var date_invert = new Date();
-	        		var coord = projection.invert(x, y);
-	        		time_invert += (new Date() - date_invert);
-	        		if(coord){
-	        			var date_interpolate = new Date();
-	        			var λ = coord.x, φ = coord.y;
-	        			var wind = _interpolate(λ, φ);
-	        			if(wind){
-		        			color = getWindColor(wind[2], 1, 1);
-		        			// console.log(x, y, wind, JSON.stringify(color));
-		        		}
-	        			// var scalar = null;
-	        			// if(wind){
-	        			// 	// wind = _distort(projection, λ, φ, x, y, velocityScale, wind);
-	        			// 	scalar = wind[2];
-	        			// }
-	        			// time_interpolate += (new Date() - date_interpolate);
-	        			// if(_isValue(scalar)){
-	        			// 	var date_color = new Date();
-	        			// 	color = _gradient(scalar, OVERLAY_ALPHA);
-	        			// 	time_color += (new Date() - date_color);
-	        			// }
-	        		}
+	//         		var date_invert = new Date();
+	//         		var coord = projection.invert(x, y);
+	//         		time_invert += (new Date() - date_invert);
+	//         		if(coord){
+	//         			var date_interpolate = new Date();
+	//         			var λ = coord.x, φ = coord.y;
+	//         			var wind = _interpolate(λ, φ);
+	//         			if(wind){
+	// 	        			color = getWindColor(wind[2], 1, 1);
+	// 	        			// console.log(x, y, wind, JSON.stringify(color));
+	// 	        		}
+	//         			// var scalar = null;
+	//         			// if(wind){
+	//         			// 	// wind = _distort(projection, λ, φ, x, y, velocityScale, wind);
+	//         			// 	scalar = wind[2];
+	//         			// }
+	//         			// time_interpolate += (new Date() - date_interpolate);
+	//         			// if(_isValue(scalar)){
+	//         			// 	var date_color = new Date();
+	//         			// 	color = _gradient(scalar, OVERLAY_ALPHA);
+	//         			// 	time_color += (new Date() - date_color);
+	//         			// }
+	//         		}
 
-	        		if(color != TRANSPARENT_BLACK){
-	        			var date_set = new Date();
-		        		_set(x, y, color);
-		        		_set(x+1, y, color);
-		        		_set(x, y+1, color);
-		        		_set(x+1, y+1, color);
-		        		time_set += (new Date() - date_set);
-	        		}
-	        	}
+	//         		if(color != TRANSPARENT_BLACK){
+	//         			var date_set = new Date();
+	// 	        		_set(x, y, color);
+	// 	        		_set(x+1, y, color);
+	// 	        		_set(x, y+1, color);
+	// 	        		_set(x+1, y+1, color);
+	// 	        		time_set += (new Date() - date_set);
+	//         		}
+	//         	}
 
-	        	var p = (x)/width*100;
-	        	p = p.toFixed(1);
-	        	$progress.width(p+'%');
-	        	// if(--dealingNum == 0){
-	        	// 	ctx.putImageData(imageData, 0, 0);
-	        	// 	log('create mask');
-	        	// }
-	        	clearTimeout(tt_run);
-	        	if(--dealingNum <= 0){
-	        		var date_putdata = new Date();
-	        		ctx.putImageData(imageData, 0, 0);
-	        		$progress.width(0);
+	//         	var p = (x)/width*100;
+	//         	p = p.toFixed(1);
+	//         	$progress.width(p+'%');
+	//         	// if(--dealingNum == 0){
+	//         	// 	ctx.putImageData(imageData, 0, 0);
+	//         	// 	log('create mask');
+	//         	// }
+	//         	clearTimeout(tt_run);
+	//         	if(--dealingNum <= 0){
+	//         		var date_putdata = new Date();
+	//         		ctx.putImageData(imageData, 0, 0);
+	//         		$progress.width(0);
 
-	        		log('time_invert = '+time_invert);
-	        		log('time_interpolate = '+time_interpolate);
-	        		log('time_color = '+time_color);
-	        		log('time_set = '+time_set);
-	        		log('time_putdata = '+(new Date() - date_putdata));
-	        		log('time_create_mask = '+(new Date() - date_create_mask));
+	//         		log('time_invert = '+time_invert);
+	//         		log('time_interpolate = '+time_interpolate);
+	//         		log('time_color = '+time_color);
+	//         		log('time_set = '+time_set);
+	//         		log('time_putdata = '+(new Date() - date_putdata));
+	//         		log('time_create_mask = '+(new Date() - date_create_mask));
 
-	        		cb && cb();
-	        	}
+	//         		cb && cb();
+	//         	}
 
 
-	        	// var p = (width-x)/width*100;
-	        	// p = p.toFixed(1);
-	        	// $progress.text(p+'%', x);
-	        	// // if(--dealingNum == 0){
-	        	// // 	ctx.putImageData(imageData, 0, 0);
-	        	// // 	log('create mask');
-	        	// // }
-	        	// clearTimeout(tt_run);
-	        	// if(--dealingNum > 0){
-	        	// 	tt_run = setTimeout(function(){
-	        	// 		setY(x-step);
-	        	// 	}, 0);
-	        	// }else{
-	        	// 	var date_putdata = new Date();
-	        	// 	ctx.putImageData(imageData, 0, 0);
-	        	// 	$progress.text('');
+	//         	// var p = (width-x)/width*100;
+	//         	// p = p.toFixed(1);
+	//         	// $progress.text(p+'%', x);
+	//         	// // if(--dealingNum == 0){
+	//         	// // 	ctx.putImageData(imageData, 0, 0);
+	//         	// // 	log('create mask');
+	//         	// // }
+	//         	// clearTimeout(tt_run);
+	//         	// if(--dealingNum > 0){
+	//         	// 	tt_run = setTimeout(function(){
+	//         	// 		setY(x-step);
+	//         	// 	}, 0);
+	//         	// }else{
+	//         	// 	var date_putdata = new Date();
+	//         	// 	ctx.putImageData(imageData, 0, 0);
+	//         	// 	$progress.text('');
 
-	        	// 	log('time_invert = '+time_invert);
-	        	// 	log('time_interpolate = '+time_interpolate);
-	        	// 	log('time_color = '+time_color);
-	        	// 	log('time_set = '+time_set);
-	        	// 	log('time_putdata = '+(new Date() - date_putdata));
-	        	// 	log('time_create_mask = '+(new Date() - date_create_mask));
+	//         	// 	log('time_invert = '+time_invert);
+	//         	// 	log('time_interpolate = '+time_interpolate);
+	//         	// 	log('time_color = '+time_color);
+	//         	// 	log('time_set = '+time_set);
+	//         	// 	log('time_putdata = '+(new Date() - date_putdata));
+	//         	// 	log('time_create_mask = '+(new Date() - date_create_mask));
 
-	        	// 	cb && cb();
-	        	// }
-	        }
-	        var runningNum = width;
-	        setY(runningNum-step);
+	//         	// 	cb && cb();
+	//         	// }
+	//         }
+	//         var runningNum = width;
+	//         setY(runningNum-step);
 
-	        for(var i = 0, j = tt_run_arr.length; i<j; i++){
-	        	clearTimeout(tt_run_arr[i]);
-	        }
-	        tt_run_arr = [];
-	        var dealingNum = 0;
-	        for(var x = 0;x<width;x+=step){
-	        	(function(x_inner){
-	        		dealingNum++;
-	        		var t = setTimeout(function(){
-		        		setY(x_inner);
-		        	}, x);
-		        	tt_run_arr.push(t);
-	        	})(x);
-	        }
-		}
-	})();
+	//         for(var i = 0, j = tt_run_arr.length; i<j; i++){
+	//         	clearTimeout(tt_run_arr[i]);
+	//         }
+	//         tt_run_arr = [];
+	//         var dealingNum = 0;
+	//         for(var x = 0;x<width;x+=step){
+	//         	(function(x_inner){
+	//         		dealingNum++;
+	//         		var t = setTimeout(function(){
+	// 	        		setY(x_inner);
+	// 	        	}, x);
+	// 	        	tt_run_arr.push(t);
+	//         	})(x);
+	//         }
+	// 	}
+	// })();
 	
 	function initMap(){
 		var $map = $('#map');
@@ -1432,7 +1435,7 @@ Date.prototype.format = function(format,is_not_second){
 	    map.addControl(new BMap.NavigationControl());  //添加默认缩放平移控件
 	    map.addControl(new BMap.ScaleControl());                    // 添加默认比例尺控件
 	    // map.addControl(new BMap.MapTypeControl({mapTypes: [BMAP_NORMAL_MAP,BMAP_HYBRID_MAP]}));     //2D图，卫星图
-	    map.addControl(new BMap.MapTypeControl({type: BMAP_MAPTYPE_CONTROL_DROPDOWN,anchor: BMAP_ANCHOR_TOP_RIGHT}));    //左上角，默认地图控件
+	    // map.addControl(new BMap.MapTypeControl({type: BMAP_MAPTYPE_CONTROL_DROPDOWN,anchor: BMAP_ANCHOR_TOP_RIGHT}));    //左上角，默认地图控件
 		map.addEventListener("dragend", dragendOrZoomend);
 	    map.addEventListener("zoomend", dragendOrZoomend);
 	    map.addEventListener("dragstart", dragendOrZoomstart);

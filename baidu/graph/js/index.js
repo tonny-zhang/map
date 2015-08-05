@@ -18,7 +18,7 @@
 			var point = new BMap.Point(xy[0], xy[1]);
 			point_arr.push(point);
 		});
-		color_stroke = 'rgb(255, 255, 255)';
+		// color_stroke = 'rgb(255, 255, 255)';
 		var polygon = new BMap.Polygon(point_arr, {
 			strokeColor: color_stroke || color_fill || 'rgba(255,0,0,1)',
 			fillColor: color_fill || COLOR_OPACITY,
@@ -62,11 +62,18 @@
 				}, "#1010FF", v.weight);
 			})
 		}else{
-			$.each(data, function(i, v){
-				_addPolygon(v.items, function(v){
-					return [v.lng, v.lat]
-				}, v.color);
-			});
+			if(data){
+				var relation = data.r;
+				var list = data.list;
+				$.each(relation, function(i, v){
+					var color = v[1],
+						index = v[0],
+						clip_index = v[2];
+					_addPolygon(list[index], function(item){
+						return [item.x, item.y]
+					}, color);
+				});
+			}
 		}
 	}
 	var changeProduct = (function(){

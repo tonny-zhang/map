@@ -1663,7 +1663,7 @@ Date.prototype.format = function(format,is_not_second){
 	})();
 	global.loadWindSpeed = _getAjax(function(lon, lat, callback){
 		// return 'http://10.14.85.116/php/wind/data.php?_name=historywindspeed&lon='+lon+'&lat='+lat;
-		return url_data+'?_name=micapswind&type=1000&lon='+lon+'&lat='+lat;
+		return url_data+'?_name=wind&type=1000&lon='+lon+'&lat='+lat;
 	});
 	global.loadAir = _getAjax(function(lon, lat, callback){
 		return url_data+'?_name=micapsvalue&lon='+lon+'&lat='+lat+'&vti=024,048,072&type=zhyb';

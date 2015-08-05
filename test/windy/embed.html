@@ -1,0 +1,103 @@
+
+<!DOCTYPE html>
+<html lang="en" ng-app="myApp">
+<head>
+	<title>Windyty, wind forecast</title>
+
+	<base href="http://10.14.85.116/map/test/windy/" />
+
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+	<!-- STYLESHEETS -->
+	<link href="./css/embed-styles.css?timestamp=0845" rel="stylesheet" type="text/css"./> 
+
+	<!-- 3rd party libs 
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.7/angular.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.js"></script> 
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/bower-angular-translate/2.5.2/angular-translate.min.js"></script>
+	-->
+	<script src="./js/externaljs2.js?angular=134"></script> 
+	<script src="./js/leaflet.js"></script> 
+
+	<script src="./js/embed-final1.js?timestamp=0845"></script>
+</head>
+<body id="body">
+
+
+<!-- WINDYTY CONTROLLER -->
+<div ng-controller="WindytyCtrl">
+
+
+	<!-- COLOR LEGNED -->
+	<div id="legend" ng-if="legend.desc" ng-click="cycleLegend()">	
+		<div style="background-color: {{legend.data[0].color}};">{{legend.desc}}</div>
+		<div ng-repeat="item in legend.data" style="background-color: {{item.color}};">{{item.desc}}</div>
+	</div>
+
+
+	<!-- DROP DOWN MENUS -->
+	<div id="settings" ng-show="menu">
+
+		<div class="item">
+		{{ 'DATE_AND_TIME' | translate }}: <br />	
+				<select ng-model="rqstdIndex" ng-change="selectHour(rqstdIndex)"  ng-show="product == 'gfs'"> 
+					<option ng-repeat="(key, item) in dayHours" value="{{::item.index}}" 
+							ng-selected="key == rqstdDir">{{::item.text | translate}} {{::item.day}} - {{::item.hour}}</option> 
+				</select> 
+		</div>
+		
+
+    	<div class="item">{{ 'OVERLAY' | translate }}:<br />
+
+			<!-- AS SELECT BOX -->			
+			<select id="overlay" ng-model='overlay' 
+					ng-change="changeParams('overlay')">
+	    	  <option value="wind" translate>WIND</option>
+			  <option value="temp" translate>TEMP</option>
+			  <option value="pressure" translate>PRESS</option>
+		      <option value="clouds" translate>CLOUDS</option>
+		    </select> 
+
+	    </div>	
+	    	
+    	<div class="item">
+    	{{ 'ALTITUDE' | translate }}:<br />
+    	<select ng-model="level" ng-change="changeParams('level')">		
+			<option value="surface" translate="SFC"></option>
+			<option value="975h">300m, 1000ft</option>
+			<option value="950h">600m, 2000ft</option>
+			<option value="925h">750m, 2500ft</option>
+			<option value="900h">900m, 3000ft</option>
+			<option value="850h">1500m, 5000ft</option>
+			<option value="750h">2400m, 8000ft</option>
+			<option value="700h">3000m, FL100</option>
+    	</select>
+    	</div>
+
+  	</div> <!-- end of div settings -->
+
+</div> <!-- END of WINDYTY CONTROLLER -->
+
+
+<!-- small note 
+<div id="note"><span ng-if="message">{{ 'E_MESSAGE' | translate }} </span><a href="https://www.windyty.com/?{{url}}" target="wind">www.windyty.com</a></div>	-->
+
+
+<!-- LEAFLET MAPS -->
+<div id="map_container"><div id="map_canvas"></div></div> 
+
+<!-- hidden progress Bar DIVs for progressBar service -->
+<div id="progress-bar" style="visibility:hidden;"><div id="progress"><div id="progress-inset">
+	<div id="progress-line" class="played"></div>
+	<div id="ghost-timecode"><div id="ghost-box" class="box"></div></div>
+	<div id="timecode"><div id="timecode-box" class="box"></div></div>
+</div></div></div>
+
+</body>	
+</html>
+
+
+
+
+ 

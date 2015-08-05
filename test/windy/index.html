@@ -1,0 +1,396 @@
+
+<!DOCTYPE html>
+<html lang="en" ng-app="myApp">
+<head>
+	<title>Windyty, wind map &amp; forecast</title>
+
+	<base href="/" />
+
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+	<!-- STYLESHEETS -->
+	<link href="/css/styles13.css?timestamp=0504" rel="stylesheet" type="text/css"/> 
+
+	<!-- uberimportant file -->
+	<script src="/gfs/minifest.js"></script>
+
+	<script src="/js/leaflet.js"></script> 
+
+	<script src="/js/externaljs2.js?angular=134"></script> 
+	<script src="/js/final13.js?timestamp=0504"></script>
+	<!-- for Google -->
+	<!-- <meta name="fragment" content="!"> this should make GoogleBot to crawl _escaped_fragment_ -->	
+	<meta name="description" content="Wind map and weather forecast for kiters, surfers, pilots, sailors and anyone else. Worldwide animated weather map, with easy to use overlays and precise spot forecast. METAR, TAF and NOTAMs for any airport in the World.">
+	<meta name="keywords" content="Windyty, wind map, windfinder, windguru, wind forecast, weather forecast, GFS" />
+	<meta name="author" content="IL" />
+	<meta name="copyright" content="Creative Commons" />
+	<meta name="application-name" content="Windyty.com" />
+
+	<!-- for Facebook -->          
+	<meta property="og:title" content="Windyty, wind forecast" />
+	<meta property="og:type" content="article" />
+	<meta property="og:image" content="https://www.windyty.com/img/socialshare.png?version=3" />
+	<meta property="og:url" content="https://www.windyty.com" />
+	<meta property="og:description" content="Ubercool wind animation all over the world. Wind and weather forecast for kiters, surfers, pilots and anyone else." />
+
+	<!-- for Twitter -->          
+	<meta name="twitter:card" content="summary" />
+	<meta name="twitter:title" content="Windyty, wind forecast" />
+	<meta name="twitter:description" content="Ubercool wind animations." />
+	<meta name="twitter:image" content="img/socialshare.png?version=2" />
+
+	<!-- FAVIKONKY -->
+	<link rel="apple-touch-icon" sizes="57x57" href="img/favicons/apple-touch-icon-57x57.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="img/favicons/apple-touch-icon-114x114.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="img/favicons/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="144x144" href="img/favicons/apple-touch-icon-144x144.png">
+	<link rel="apple-touch-icon" sizes="60x60" href="img/favicons/apple-touch-icon-60x60.png">
+	<link rel="apple-touch-icon" sizes="120x120" href="img/favicons/apple-touch-icon-120x120.png">
+	<link rel="apple-touch-icon" sizes="76x76" href="img/favicons/apple-touch-icon-76x76.png">
+	<link rel="apple-touch-icon" sizes="152x152" href="img/favicons/apple-touch-icon-152x152.png">
+	<link rel="apple-touch-icon" sizes="180x180" href="img/favicons/apple-touch-icon-180x180.png">
+	<meta name="msapplication-TileColor" content="#666666">
+	<meta name="msapplication-TileImage" content="img/favicons/mstile-144x144.png">
+	<meta name="msapplication-config" content="img/favicons/browserconfig.xml">
+
+</head>
+<body id="body" ng-controller="MainCtrl" class="zoom{{layout.zoom}}" ng-class="{ 'detailon':layout.detail }">
+
+
+<!-- HEADER -->
+<div id="header-container">
+
+	<!-- first line -->
+	<div id="title" ng-click="initPosition()">
+		Windyty <span>wind forecast</span> <img class="loader" ng-if="overAllLoader">
+	</div>
+
+	<!-- mobile lupa -->
+	<div ng-init='showsearch = false' id="lupa" ng-click="showsearch = ! showsearch" title="{{ 'SEARCH' | translate }}">q</div>
+
+	<!-- SEARCH WINDOW -->
+	<form id="search" ng-class="{ false:'mobilehide' }[showsearch]" ng-controller="QueryCtrl">
+		<input type="text" id="q" ng-model="query" 
+				autocomplete="off" spellcheck="false"
+				ng-change='change()' placeholder="{{ 'SEARCH' | translate }}" 
+				ng-blur='blur()'
+				ng-class="{ 'loading': loader }"
+				ng-focus="focus()"> 
+
+		<!-- recent searches -->		
+		<div ng-if='showRecents && recents.length > 0  &&  suggestions.length == 0' id="recents">
+			<div class="recent-div" ng-repeat="recent in recents" ng-click="goRecent(recent)">{{::recent}}</div>
+			<div id="recents-promo">Pilot? Try "KGLW KLAX" for quick route calculation</div> 
+		</div>
+		
+		<!-- search results --> 
+		<div ng-if='suggestions.length > 0 || fltline' id="results">
+			
+			<div ng-repeat='hit in suggestions' 
+				class="result" 
+				ng-class="{ 'active': $index == active }" 
+				ng-mouseenter="selectActive($index)" 
+				ng-click="submit($index)"> 
+				<div class="title">{{::hit.title}}</div><span class="poi_{{::hit.type}}"></span><br>
+				<div class="subtitle">
+					<span ng-if="hit.region">{{::hit.region}},</span> {{::hit.country}}
+				</div>
+			</div>
+
+			<div ng-if="fltline" ng-controller="FltLineCtrl" class="result" style="padding-top: 15px;">
+				Distance: <b>{{ km * 0.54 | number:0 }}Nm</b> ({{ km | number:0 }}km)
+				<div id="markericon">drag the markers if you want</div>
+			</div>
+
+		</div>
+
+
+	</form> <!-- End of QueryCtrl -->
+
+</div> <!-- END of HEADER -->
+
+
+<!-- MENU -->
+<a id="menuicon" href="menu" translate>MENU</a>	
+
+
+<!-- TEXT ON TOP RIGHT --> 	<!-- FB SHARE -->
+<!-- <div id="fb-share" ng-if="fbShare">
+
+
+	<iframe src="//www.facebook.com/plugins/share_button.php?href=https%3A%2F%2Fwww.windyty.com%2F&amp;layout=button_count&amp;appId=426030704216458" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width: 110px; height: 20px;" allowTransparency="true"></iframe>
+	
+</div>	-->
+
+
+<!-- DETAIL ANNOUNCE -->
+<!-- <div class="announce" ng-if="message">
+Now everybody can read weather reports from airports
+</div> -->
+
+
+<div id="intro35" ng-if="intro">
+<div>Wind & Wave forecast as you love it</div>
+<div class="bottom">...now on Windyty.com</div>
+</div>
+
+<!-- MOBILE MENU -->
+<div ng-init='navmenu = false' 
+	ng-class="{ true: 'mobilemenu-up', false:'mobilemenu-down'}[navmenu]" 
+	ng-click="navmenu = ! navmenu" title="Menu...">d</div>
+
+
+
+<!-- WINDYTY CONTROLLER -->
+<div ng-controller="WindytyCtrl" ng-class="{ false: 'bottom-hide', true: 'bottom-show'}[navmenu]">
+
+	<div id="bottom"> 
+
+		<div id="progress-bar-wrapper" ng-show="product == 'gfs' && ! historical">
+
+			<!-- PLAY BUTTON -->
+			<div ng-class="{true:'pause', false:'play'}[animationRunning]" id="playpause" ng-click="toggleAnimation()"></div>	
+
+			<!-- DAY HOURS PROGRESS BAR -->
+			<div id="progress-bar"> 
+
+				<div id="progress">
+					<div id="progress-inset">
+			
+						<div id="progress-line" class="played"></div>
+
+						<div id="ghost-timecode">
+							<div id="ghost-box" class="box"></div>
+						</div>
+
+						<div id="timecode" title="{{'D_LT2' | translate }}" class="timecode">
+							<div id="timecode-box" class="box"></div><img class="loader" ng-if="dayLoader">
+						</div>
+			
+					</div>
+				</div>
+
+				<div id="calendar">
+					<div ng-repeat="day in calendar" 
+						ng-click="selectDay($index)">{{day.display | translate}} {{::day.day}}</div>	
+				</div>
+
+			</div>
+		</div>	
+
+		<!-- historical value -->
+		<div id="historical" ng-if="product == 'gfs' && historical">
+			<div translate="DAYS_AGO" translate-value-daysago="{{daysAgo}}"></div>
+			<div>{{:: histDate }}</div>
+			<a href ng-click="init()" translate="SHOW_ACTUAL"></a>
+		</div>
+
+
+		<!-- ACCUMULATIONS -->
+		<div id="accumulations" ng-show="product == 'accumulations' || product == 'snowcover'">
+
+			<span ng-if="overlay =='rain'" translate>RAINACCU</span>
+			<span ng-if="overlay =='snow'" translate>SNOWACCU</span> 
+			<span ng-if="overlay =='waverages'" translate>WINDAVERAGES</span> 
+
+			<span id="wind-note">{{ 'WIND_AT' | translate }} {{windNote}} UTC</span>
+
+			<img class="loader" ng-if="dayLoader">
+
+			<div id="acc-select">
+				<div ng-if="overlay == 'rain'" ng-class="{ 'selected': acTime == 'past' }" ng-click="changeParams('acTime','past')" 
+					translate="ACC_LAST_DAYS" translate-value-num="30"></div> 
+				<div  ng-if="overlay == 'rain'" ng-class="{ 'selected': acTime == 'past10d' && product == 'accumulations'}" 
+						ng-click="changeParams('acTime','past10d')" translate="ACC_LAST_DAYS" translate-value-num="10"></div> 
+				<div ng-class="{ 'selected': acTime == 'past3d' && product == 'accumulations'}" 
+						ng-click="changeParams('acTime','past3d')" translate="ACC_LAST_DAYS" translate-value-num="3"></div>
+				<div ng-class="{ 'selected': acTime == 'past24h' && product == 'accumulations'}" 
+						ng-click="changeParams('acTime','past24h')" translate="ACC_LAST_HOURS" translate-value-num="24"></div>
+				<div ng-class="{ 'selected': acTime == 'next24h' && product == 'accumulations'}" 
+						ng-click="changeParams('acTime','next24h')" translate="ACC_NEXT_HOURS" translate-value-num="24"></div>
+				<div ng-class="{ 'selected': acTime == 'next3d' && product == 'accumulations'}" 
+						ng-click="changeParams('acTime','next3d')" translate="ACC_NEXT_DAYS" translate-value-num="3"></div>
+				<div ng-class="{ 'selected': acTime == 'next' && product == 'accumulations'}" 
+						ng-click="changeParams('acTime','next')" translate="ACC_NEXT_DAYS" translate-value-num="10"></div>			
+			</div>	
+
+			<div id="snow-cover" ng-if="overlay == 'snow'" ng-class="{ 'selected': product == 'snowcover' }" 
+			ng-click="changeParams('product','snowcover')">{{ 'SNOWCOVER' | translate }}</div> 
+
+		</div>
+
+
+
+		<!-- DROP DOWN MENUS -->
+		<div id="settings">
+
+			<!-- product specific messages -->
+			<div id="messages">
+
+				<!-- Meteoblue  -->		
+				<!-- <div ng-show="product == 'mbeurope'"><a href="/meteoblue/">Showing detailed 4x4km forecast from 
+					<img src="/img/logo-mb.svg" width="80px"><br>
+					More information...</a>
+				</div> -->
+
+			</div>
+
+			<!-- product info and last update time -->
+			<div id="productinfo" ng-show="showInfo">
+				<span translate>MENU_F_MODEL</span>: {{ productModel }}<br />
+				<span translate>MENU_U_INTERVAL</span>: {{ productInterval }}<br />
+				<span translate>MENU_D_UPDATED</span>: {{ lastModString }}<br />
+
+				<div ng-show="product == 'snowcover'" style="padding-top: 5px;">Aviable on <b>northern hemisphere only.</b> Data are gathered 
+				from satellite and can be updated only when there are no clouds over the location, when the satellite is flying over.
+				</div>
+
+			</div>
+
+			<div id="model-info" ng-mouseenter="showInfo = true; updateProductInfo()" ng-mouseleave="showInfo = false">info</div>
+
+			<div id="datetime">
+			{{ 'DATE_AND_TIME' | translate }} <img class="loader" ng-if="dayLoader"><br />	
+
+				<!-- CALENDAR SELECT -->
+				<select ng-model="rqstdIndex" ng-change="selectHour(rqstdIndex)"  ng-show="product == 'gfs'"> 
+					<option ng-repeat="(key, item) in dayHours" value="{{::item.index}}" 
+							ng-selected="key == rqstdDir">{{item.text | translate}} {{::item.day}} - {{::item.hour}}</option> 
+				</select> 
+
+				<!-- ACCUMULATION SELECT -->
+				<select ng-model="acTime" ng-change="changeParams('acTime')"  ng-show="product == 'accumulations'"> 
+					<option ng-if="overlay == 'rain'" value="past" translate="ACC_LAST_DAYS" translate-value-num="30"></option>
+					<option ng-if="overlay == 'rain'" value="past10d" translate="ACC_LAST_DAYS" translate-value-num="10"></option> 
+					<option value="past3d" translate="ACC_LAST_DAYS" translate-value-num="3"></option>
+					<option value="past24h" translate="ACC_LAST_HOURS" translate-value-num="24"></option>
+					<option value="next24h" translate="ACC_NEXT_HOURS" translate-value-num="24"></option>
+					<option value="next3d" translate="ACC_NEXT_DAYS" translate-value-num="3"></option>
+					<option value="next" translate="ACC_NEXT_DAYS" translate-value-num="10"></option>	
+				</select>
+
+			</div>
+			
+
+	    	<div class="item">
+
+				<span id="overlaytxt">{{ 'OVERLAY' | translate }}</span><img class="loader" ng-if="overlayLoader"><br />
+
+				<!-- AS SELECT BOX -->			
+				<select id="overlay" ng-model='overlay' 
+						ng-change="changeParams('overlay')"
+						ng-disabled="layout.zoom > 11">
+		    	  <option value="wind">{{ 'WIND' | translate }}</option>
+		    	  <option value="gust">{{ 'GUST' | translate }}</option> 
+		    	  <option value="waverages">{{ 'WAVERAGES' | translate }}</option> 
+				  <option value="temp">{{ 'TEMP' | translate }}</option>
+  			      <option value="clouds">{{ 'CLOUDS' | translate }}</option>
+			      <option value="rain">{{ 'RACCU' | translate }}</option>
+			      <option value="lclouds">{{ 'LCLOUDS' | translate }}</option>
+			      <option value="snow">{{ 'SNOW' | translate }}</option>
+				  <option value="pressure">{{ 'PRESS' | translate }}</option>
+			      <option value="rh">{{ 'RH' | translate }}</option>      
+			    </select> 
+
+		    	<!-- AS RADIO -->
+		    	<div id="radios" ng-show="layout.zoom < 12 || product == 'snowcover'">
+
+					<div><input type="radio" ng-model='overlay' ng-change="changeParams('overlay')" value="wind"><span ng-click="showGust = ! showGust" ng-class="{ 'up': showGust }">{{ 'WIND' | translate }}</span></div>
+	
+						<div ng-show="showGust || overlay == 'gust' || overlay == 'waverages'" class="radio-inset">
+							<div><input type="radio" ng-model='overlay' ng-change="changeParams('overlay')" value="gust">{{ 'GUST' | translate }}</div> 
+							<div><input type="radio" ng-model='overlay' ng-change="changeParams('overlay')" value="waverages">{{ 'WAVERAGES' | translate }}</div> 
+						</div>	
+
+					<div><input type="radio" ng-model='overlay' ng-change="changeParams('overlay')" value="temp">{{ 'TEMP' | translate }}</div>
+
+					<div><input type="radio" ng-model='overlay' ng-change="changeParams('overlay')" value="clouds"><span ng-click="showClouds = ! showClouds" ng-class="{ 'up': showClouds }">{{ 'CLOUDS' | translate }}</span></div> 
+					
+					<div ng-show="showClouds || overlay == 'lclouds' || overlay == 'rain' " class="radio-inset">
+						<div><input type="radio" ng-model='overlay' ng-change="changeParams('overlay')" value="lclouds">{{ 'LCLOUDS' | translate }}</div>
+						<div><input type="radio" ng-model='overlay' ng-change="changeParams('overlay')" value="rain">{{ 'RACCU' | translate }}</div>							
+					</div>	
+
+					<div><input type="radio" ng-model='overlay' ng-change="changeParams('overlay')" value="snow">{{ 'SNOW' | translate }}</div> 
+
+
+					<div><input type="radio" ng-model='overlay' ng-change="changeParams('overlay')" value="pressure">{{ 'PRESS' | translate }} <!-- <cite style="color: yellow; font-weight:100">new</cite> --> </div>	
+
+					<div><input type="radio" ng-model='overlay' ng-change="changeParams('overlay')" value="rh">{{ 'RH' | translate }}</div>	
+
+		    	</div>
+
+		    	<!-- This is quick solution but later this should be based on actual product data -->
+		    	<div id="overlaynote" ng-show="product !== 'snowcover' && layout.zoom > 11" translate="O_DISABLED"></div>
+
+		    </div><!-- end of item -->	
+		    	
+	    	<div class="item">
+		    	{{ 'ALTITUDE' | translate }} <img class="loader" ng-if="levelLoader"><br />
+		    	<select ng-model="level" ng-change="changeParams('level')" ng-disabled="product != 'gfs'">		
+					<option value="surface">{{ 'SFC' | translate }}</option>
+					<option value="975h">300m, 1000ft</option>
+					<option value="950h">600m, 2000ft</option>
+					<option value="925h">750m, 2500ft</option>
+					<option value="900h">900m, 3000ft</option>
+					<option value="850h">1500m, 5000ft</option>
+					<option value="750h">2400m, 8000ft</option>
+					<option value="700h">3000m, FL100</option>
+					<option value="550h">4800m, FL160</option>
+					<option value="450h">6000m, FL200</option>
+					<option value="350h">8000m, FL260</option>
+					<option value="300h">9000m, FL300</option>
+					<option value="250h">10km, FL340</option>
+					<option value="200h">11.7km, FL390</option>
+					<option value="150h">13.5km, FL450</option>
+		    	</select>
+	    	</div><!-- end of item -->
+
+	  	</div> <!-- end of div settings -->
+ 	
+	</div>	<!-- end of id bottom -->
+
+	<!-- COLOR LEGNED -->
+	<div id="legend" ng-if="legend.desc && ( layout.zoom < 12 )" ng-click="cycleLegend()" title="{{ 'CLICK_ON_LEGEND' | translate }}">	
+		<div ng-style="{ 'background-color': legend.data[0].color }">{{legend.desc}}</div>
+		<div ng-repeat="item in legend.data" ng-style="{ 'background-color': item.color }">{{item.desc}}</div>
+	</div>
+
+</div><!-- END of WINDYTY CONTROLLER -->
+
+
+
+<!-- LEAFLET MAPS -->
+<div id="map_container"><div id="map_canvas"></div></div> 
+
+<!-- CONTENT -->
+<div ng-view class="view-animate"></div>
+
+
+<script>
+
+  // GOOGLE ANALYTICS 
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  //For illegally embeded pages, use different measurement code
+  if (window.top !== window.self) 
+  	ga('create', 'UA-56263486-2', 'auto'); //code for embed
+  else 
+  	ga('create', 'UA-56263486-1', 'www.windyty.com'); //regular code
+
+  ga('send', 'pageview');
+
+
+</script>
+
+</body>	
+</html>
+
+
+
+
+ 
