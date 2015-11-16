@@ -964,9 +964,9 @@
 					$desc.text(data.summary);
 					rainfall_data = data.dataseries;
 					var t = data.temp < -2?'雪':'雨';
-					$('.level_c .leve_1:eq(1) span').text('大'+t);
-					$('.level_c .leve_1:eq(2) span').text('中'+t);
-					$('.level_c .leve_1:eq(3) span').text('小'+t);
+					$('.level_c .leve_1:eq(0) span').text('大'+t);
+					$('.level_c .leve_1:eq(1) span').text('中'+t);
+					$('.level_c .leve_1:eq(2) span').text('小'+t);
 					init_canvas_size();
 					drawSector();
 					share();
