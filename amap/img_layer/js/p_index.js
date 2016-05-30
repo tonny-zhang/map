@@ -2,8 +2,9 @@
 !function(a){"function"==typeof define&&define.amd?define(["jquery"],a):"object"==typeof exports?module.exports=a:a(jQuery)}(function(a){function b(b){var g=b||window.event,h=i.call(arguments,1),j=0,l=0,m=0,n=0,o=0,p=0;if(b=a.event.fix(g),b.type="mousewheel","detail"in g&&(m=-1*g.detail),"wheelDelta"in g&&(m=g.wheelDelta),"wheelDeltaY"in g&&(m=g.wheelDeltaY),"wheelDeltaX"in g&&(l=-1*g.wheelDeltaX),"axis"in g&&g.axis===g.HORIZONTAL_AXIS&&(l=-1*m,m=0),j=0===m?l:m,"deltaY"in g&&(m=-1*g.deltaY,j=m),"deltaX"in g&&(l=g.deltaX,0===m&&(j=-1*l)),0!==m||0!==l){if(1===g.deltaMode){var q=a.data(this,"mousewheel-line-height");j*=q,m*=q,l*=q}else if(2===g.deltaMode){var r=a.data(this,"mousewheel-page-height");j*=r,m*=r,l*=r}if(n=Math.max(Math.abs(m),Math.abs(l)),(!f||f>n)&&(f=n,d(g,n)&&(f/=40)),d(g,n)&&(j/=40,l/=40,m/=40),j=Math[j>=1?"floor":"ceil"](j/f),l=Math[l>=1?"floor":"ceil"](l/f),m=Math[m>=1?"floor":"ceil"](m/f),k.settings.normalizeOffset&&this.getBoundingClientRect){var s=this.getBoundingClientRect();o=b.clientX-s.left,p=b.clientY-s.top}return b.deltaX=l,b.deltaY=m,b.deltaFactor=f,b.offsetX=o,b.offsetY=p,b.deltaMode=0,h.unshift(b,j,l,m),e&&clearTimeout(e),e=setTimeout(c,200),(a.event.dispatch||a.event.handle).apply(this,h)}}function c(){f=null}function d(a,b){return k.settings.adjustOldDeltas&&"mousewheel"===a.type&&b%120===0}var e,f,g=["wheel","mousewheel","DOMMouseScroll","MozMousePixelScroll"],h="onwheel"in document||document.documentMode>=9?["wheel"]:["mousewheel","DomMouseScroll","MozMousePixelScroll"],i=Array.prototype.slice;if(a.event.fixHooks)for(var j=g.length;j;)a.event.fixHooks[g[--j]]=a.event.mouseHooks;var k=a.event.special.mousewheel={version:"3.1.12",setup:function(){if(this.addEventListener)for(var c=h.length;c;)this.addEventListener(h[--c],b,!1);else this.onmousewheel=b;a.data(this,"mousewheel-line-height",k.getLineHeight(this)),a.data(this,"mousewheel-page-height",k.getPageHeight(this))},teardown:function(){if(this.removeEventListener)for(var c=h.length;c;)this.removeEventListener(h[--c],b,!1);else this.onmousewheel=null;a.removeData(this,"mousewheel-line-height"),a.removeData(this,"mousewheel-page-height")},getLineHeight:function(b){var c=a(b),d=c["offsetParent"in a.fn?"offsetParent":"parent"]();return d.length||(d=a("body")),parseInt(d.css("fontSize"),10)||parseInt(c.css("fontSize"),10)||16},getPageHeight:function(b){return a(b).height()},settings:{adjustOldDeltas:!0,normalizeOffset:!0}};a.fn.extend({mousewheel:function(a){return a?this.bind("mousewheel",a):this.trigger("mousewheel")},unmousewheel:function(a){return this.unbind("mousewheel",a)}})});
 /*根据定位得到城市信息*/
 !function(){
-	var prefix_req = 'http://radar.tianqi.cn/radar/';//location.host != 'radar.tianqi.cn'?'http://radar.tianqi.cn/radar/':'./';
-	// prefix_req = "http://10.14.85.116/php/radar/";
+	var test_ip = '10.14.85.116';
+	var prefix_req = location.host == test_ip? "http://"+test_ip+"/php/radar/": 'http://radar.tianqi.cn/radar/';
+	
 	var U = {};
 	window.Util = U;
 	var OS = (function(){
@@ -156,18 +157,22 @@
         }
         var geoIP = function(failFn){
         	getJSONP(prefix_req+"geo.php",function(result){
-				if(result.status == 1){
+				if(result.status == 1 && result.rectangle && result.rectangle.length > 0){
 	            	var rectangle = result.rectangle.split(/[,;]/);
-	            	var lat = (Number(rectangle[1]) + Number(rectangle[3]))/2;
-	            	var lon = (Number(rectangle[0]) + Number(rectangle[2]))/2;
-	            	initLat = lat;
-	            	initLon = lon;
-	            	fn_success({
-        				coords: {
-        					latitude: initLat,
-        					longitude: initLon
-        				}
-        			},1);
+	            	if (rectangle.length >= 4) {
+		            	var lat = (Number(rectangle[1]) + Number(rectangle[3]))/2;
+		            	var lon = (Number(rectangle[0]) + Number(rectangle[2]))/2;
+		            	initLat = lat;
+		            	initLon = lon;
+		            	fn_success({
+	        				coords: {
+	        					latitude: initLat,
+	        					longitude: initLon
+	        				}
+	        			},1);
+        			} else {
+        				failFn && failFn(12);
+        			}
 	            }else{
 	            	failFn && failFn(12);
 	            }
@@ -567,64 +572,38 @@
 		
 		/*根据经纬度得到地名*/
 		var lnglatToAddress = function(lon,lat,callback){
-			//加载地理编码插件
-		    mapObj.plugin(["AMap.Geocoder"], function() {       
-		        var MGeocoder = new AMap.Geocoder({
-		            radius: 1000,
-		            extensions: "all"
-		        });
-		        //返回地理编码结果
-		        AMap.event.addListener(MGeocoder, "complete", function(result){
-		        	//返回地址描述
-   					var address = result.regeocode.formattedAddress;
-		        	callback && callback(address,result);
-		        });
-		        //逆地理编码
-		        MGeocoder.getAddress(new AMap.LngLat(lon,lat));
-		    });
+			var geocoder = new AMap.Geocoder({
+	            radius: 1000,
+	            extensions: "all"
+	        });
+	        var lnglatXY = [lon, lat];
+	        geocoder.getAddress(lnglatXY, function(status, result) {
+	            if (status === 'complete' && result.info === 'OK') {
+	                 var address = result.regeocode.formattedAddress;
+	            } else {
+	            	var address = '未知地点';
+	            }
+	            callback && callback(address);
+	        });
 		}
-		// lnglatToAddress(116.405285,39.904989,function(){
-		// 	console.log(arguments);
-		// });
-		/*根据地名得到经纬度*/
-		// var addressToLnglat = function (text,callback) {
-		//     var MGeocoder;
-		//     //加载地理编码插件
-		//     mapObj.plugin(["AMap.Geocoder"], function() {       
-		//         MGeocoder = new AMap.Geocoder({
-		//             city:"010", //城市，默认：“全国”
-		//             radius:1000 //范围，默认：500
-		//         });
-		//         //返回地理编码结果
-		//         AMap.event.addListener(MGeocoder, "complete", function(data){
-		//         	console.log(text,data);
-		//         	callback && callback(data.geocodes[0].location);
-		//         });
-		//         //地理编码
-		//         MGeocoder.getLocation(text);
-		//     });
-		// }
-		var amapSign = {status: 1, sign: "E764CAC53B2401E16FAEB7FD2DA351AD", ts: 1404440573, channel: "openapi_pc"};
-		var getSign = function(){
-			getJSONP(prefix_req+"sign.php",function(result){
-				if(result.status){
-                	amapSign = result;
-            	}
+		var addressToLnglat = function(text, callback) {
+			var placeSearch = new AMap.PlaceSearch({
+				pageSize: 1,
+				pageIndex: 1
 			});
-		}
-		getSign();
-		var addressToLnglat = function(text,callback){
-			var time = new Date().getTime()%1000;
-			getJSONP(prefix_req+'search.php?sign='+amapSign.sign+'&channel='+amapSign.channel+'&ts='+amapSign.ts+'&keywords='+ encodeURIComponent(text),function(data){
-				try{
-					var poi_list = data.poi_list;
-					poi_list || (poi_list = data.locres.poi_list);
-					var locate = poi_list[0];
-					var data = {lng: locate.longitude,lat: locate.latitude};
-				}catch(e){
-					
+			placeSearch.search(text, function(status, result) {
+				if (status === 'complete' && result.info === 'OK') {
+					try{
+						var pois = result.poiList.pois[0];
+						var locate = pois.location;
+						var data = {lng: locate.lng,lat: locate.lat, address: pois.address};
+						return callback && callback(data);
+					}catch(e){
+						console.log(e);
+					}
 				}
-				callback && callback(data);
+
+				alert('未找到您输入的地址，请重新输入！');
 			});
 		}
 		var _search = function(text){
@@ -634,7 +613,7 @@
 			addressToLnglat(text,function(data){
 				if(data){
 					mapTool.resetCenter(data.lng,data.lat);
-					refresh(data.lng,data.lat);
+					refresh(data.lng, data.lat, data.address);
 				}else{
 					alert('哎呀！地图君忘了“'+text+'”在哪里了！我们等下再问问他？');
 				}
@@ -919,7 +898,7 @@
 		var last_data;//最后的可用数据
 		var last_data_type;
 		var delay_refresh = 1000*60*10;
-		function refresh (lon,lat) {
+		function refresh (lon, lat, address) {
 			var lnglat = (Number(lon).toFixed(4))+","+(Number(lat).toFixed(4));
 			if(!str_search_from_command){
 				var urlnow = document.URL;
@@ -927,14 +906,16 @@
 		    	var newUrl = urlnow+"#"+lnglat;
 				history.pushState({},title,newUrl);
 			}
-			
-		    
 		    
 			clearTimeout(refreshTT);
 			mapTool.resetCenter(lon,lat);
-			lnglatToAddress(lon,lat,function(result){
-				$('.locate').text(result);
-			});
+			if (address) {
+				$('.locate').text(address);
+			} else {
+				lnglatToAddress(lon,lat,function(result){
+					$('.locate').text(result);
+				});
+			}
 			if(imgLayerConf[currentImgType || defaultSetting].isShowJS){
 				$desc.html('&nbsp;');
 				ajax_data && ajax_data.abort();
@@ -964,9 +945,10 @@
 					$desc.text(data.summary);
 					rainfall_data = data.dataseries;
 					var t = data.temp < -2?'雪':'雨';
-					$('.level_c .leve_1:eq(0) span').text('大'+t);
-					$('.level_c .leve_1:eq(1) span').text('中'+t);
-					$('.level_c .leve_1:eq(2) span').text('小'+t);
+					// $('.level_c .leve_1:eq(0) span').text('大'+t);
+					// $('.level_c .leve_1:eq(1) span').text('中'+t);
+					// $('.level_c .leve_1:eq(2) span').text('小'+t);
+					$('.level_c .leve_1 .type_flag').text(t);
 					init_canvas_size();
 					drawSector();
 					share();
@@ -1030,21 +1012,21 @@
 	        	afterGeo();
 	        },afterGeo);
         }
-        $.getScript('http://webapi.amap.com/maps?v=1.3&key=d0e895a4c4b5f0c632f8ed3985f0247f&callback='+callbackName).fail(showNetWorkStatus);
+        $.getScript('http://webapi.amap.com/maps?v=1.3&plugin=AMap.Geocoder,AMap.PlaceSearch&key=d0e895a4c4b5f0c632f8ed3985f0247f&callback='+callbackName).fail(showNetWorkStatus);
 
         var is_show_all_img = !!getParam('a_img',false),
-        	is_use_myself_data = !!getParam('use_my',true);
+        	is_use_myself_data = false;//!!getParam('use_my',true);
         if(location.href.indexOf('debug')> -1){
         	$('.tab_bar').show();
-        	console.log(is_show_all_img,is_use_myself_data);
+        	// console.log(is_show_all_img,is_use_myself_data);
         	is_show_all_img = $('[name=all_img]').prop('checked',is_show_all_img).on('click',function(){
         		is_show_all_img = $(this).prop('checked');
         		initImgLayer(currentImgType,[initLon,initLat].join());
         	}).prop('checked');
-        	is_use_myself_data = $('[name=data]').prop('checked',is_use_myself_data).on('click',function(){
-        		is_use_myself_data = $(this).prop('checked');
-        		refresh(initLon,initLat);
-        	}).prop('checked');
+        	// is_use_myself_data = $('[name=data]').prop('checked',is_use_myself_data).on('click',function(){
+        	// 	is_use_myself_data = $(this).prop('checked');
+        	// 	refresh(initLon,initLat);
+        	// }).prop('checked');
 		}
 	})
 }();
