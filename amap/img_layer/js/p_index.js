@@ -567,9 +567,9 @@
 					var lngLat = new AMap.LngLat(initLon, initLat);
 					// setMarker(lngLat);
 					refresh(initLon, initLat);
-				}, 1000);
+				}, 600);
 			});
-			var MIN_DIS = 100;
+			var MIN_DIS = 30;
 			AMap.event.addListener(mapObj, isSupportTouch ? 'touchmove' : 'mousemove', function(e) {
 				if (oldPixel) {
 					var newPixed = e.pixel;
@@ -885,8 +885,8 @@
 					var imgs = data.l.reverse();
 				}
 				renderImgLayer(imgs);
-				var auto_play = getParam('auto_play', false);
-				if (auto_play == '1') {
+				var auto_play = !!getParam('auto_play', false);
+				if (auto_play) {
 					Player.reset();
 					Player.play();
 				}
