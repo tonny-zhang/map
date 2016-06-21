@@ -271,16 +271,16 @@
 			$('body').addClass('bg_null');
 		}
 		var init_canvas_size = function() {
-				// console.log($('#hour_rain').width(),$('#hour_rain').outerWidth());
-				var info_width = $('#hour_rain').width(),
-					into_height = $('#hour_rain').height();
-				var width = info_width > 600 ? info_width - 40 : info_width;
-				$('#rain_line').attr('width', width).attr('height', into_height).css({
-					width: width,
-					height: into_height
-				});
-			}
-			// init_canvas_size();
+			// console.log($('#hour_rain').width(),$('#hour_rain').outerWidth());
+			var info_width = $('#hour_rain').width(),
+				into_height = $('#hour_rain').height();
+			var width = info_width > 600 ? info_width - 40 : info_width;
+			$('#rain_line').attr('width', width).attr('height', into_height).css({
+				width: width,
+				height: into_height
+			});
+		}
+		init_canvas_size();
 		var resize_tt;
 		window.onresize = function() {
 			resize_tt = setTimeout(function() {
@@ -789,21 +789,25 @@
 
 				// var img = domain + v[0];
 				var img = v.l2;
-				// img = "http://10.14.85.116/000.png";
-				var m = EXRE_IMG_URL.exec(img);
-				var center_lng = parseFloat(m[1]),
-					center_lat = parseFloat(m[2]),
-					span_lng = parseFloat(m[3]) / 2,
-					span_lat = parseFloat(m[4]) / 2;
+				var pos = v.pos;
+				if (pos) {
+					var leftTop = new AMap.LngLat(pos[1], pos[0]);
+					var rightBottom = new AMap.LngLat(pos[3], pos[2]);
+				} else {
+					var m = EXRE_IMG_URL.exec(img);
+					var center_lng = parseFloat(m[1]),
+						center_lat = parseFloat(m[2]),
+						span_lng = parseFloat(m[3]) / 2,
+						span_lat = parseFloat(m[4]) / 2;
 
-				var leftTop = new AMap.LngLat(center_lng, 12.2),
-					rightBottom = new AMap.LngLat(137.0, 54.2),
+					var leftTop = new AMap.LngLat(center_lng, 12.2),
+						rightBottom = new AMap.LngLat(137.0, 54.2),
 
-					leftTop = new AMap.LngLat(center_lng - span_lng, center_lat - span_lat),
-					rightBottom = new AMap.LngLat(center_lng + span_lng, center_lat + span_lat),
-					// var leftTop = new AMap.LngLat(73.0, 12.9),
-					// 	rightBottom = new AMap.LngLat(137.0,54.9 ),
-					bounds = new AMap.Bounds(leftTop, rightBottom);
+						leftTop = new AMap.LngLat(center_lng - span_lng, center_lat - span_lat),
+						rightBottom = new AMap.LngLat(center_lng + span_lng, center_lat + span_lat);
+				}
+				
+				var bounds = new AMap.Bounds(leftTop, rightBottom);
 				var new_layer = new AMap.GroundImage(img, bounds, {
 					map: mapObj,
 					clickable: false
@@ -812,16 +816,22 @@
 
 				new_layer.setOpacity(i == 0 ? showOpacity : 0);
 				var time = new Date(v[1] * 1000);
-				// var hours = time.getHours();
-				// if(hours < 10){
-				// 	hours = '0'+hours;
-				// }
-				// var minutes = time.getMinutes();
-				// if(minutes < 10){
-				// 	minutes = '0'+minutes;
-				// }
-				// new_layer.time = hours+':'+minutes;
-				new_layer.time = v.l1.substr(11, 5);
+				var time = v.l1;
+				if (typeof time == 'string') {
+					time = time.substr(11, 5);
+				} else {
+					var hours = time.getHours();
+					if(hours < 10){
+						hours = '0'+hours;
+					}
+					var minutes = time.getMinutes();
+					if(minutes < 10){
+						minutes = '0'+minutes;
+					}
+
+					time = hours+':'+minutes;
+				}
+				new_layer.time = time;
 				randar_layers.push(new_layer);
 			});
 			$play_time.text(randar_layers.slice(-1)[0].time);
@@ -858,14 +868,28 @@
 			}
 
 			$.getJSON(url, function(data) {
-				var imgs = data.l.reverse();
+				if (type == 'radar') {
+					var imgs = data.radar_img;
+					if (imgs) {
+						var imgs_new = [];
+						$.each(imgs, function(i, d) {
+							imgs_new.push({
+								l1: new Date(d[1]*1000),
+								l2: d[0],
+								pos: d[2]
+							});
+						});
+						imgs = imgs_new;
+					}
+				} else {
+					var imgs = data.l.reverse();
+				}
 				renderImgLayer(imgs);
-				var auto_play = !!getParam('auto_play', false);
-				if (auto_play) {
+				var auto_play = getParam('auto_play', false);
+				if (auto_play == '1') {
 					Player.reset();
 					Player.play();
 				}
-
 			});
 		}
 		var $tool_bar = $('.tool_bar').click(function(e) {
@@ -969,19 +993,23 @@
 				getJSONP(url, function(data) {
 					data = formatData(data);
 
-					if (last_data_type == data.type && data_server_time > data.server_time) {
+					// if (data_server_time > data.server_time) {
+					// 	return;
+					// }
+					// data_server_time = data.server_time;
+					// if (data.status != 'ok') {
+					// 	// console.log(errorReason[data.error_type[0]]);
+					// 	return;
+					// }
+					var result = data.result;
+					if (!result) {
 						return;
 					}
-					last_data_type = data.type;
-					data_server_time = data.server_time;
-					if (data.status != 'ok') {
-						// console.log(errorReason[data.error_type[0]]);
-						return;
-					}
-					radar_desc = data.summary;
-					$desc.text(data.summary);
-					rainfall_data = data.dataseries;
-					var t = data.temp < -2 ? '雪' : '雨';
+					data = result.minutely;
+					radar_desc = data.description;
+					$desc.text(radar_desc);
+					rainfall_data = data.precipitation.slice(0, 60);
+					var t = result.hourly.temperature[0].value < -2 ? '雪' : '雨';
 					$('.level_c .leve_1 .type_flag').text(t);
 					init_canvas_size();
 					drawSector();
