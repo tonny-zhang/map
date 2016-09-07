@@ -370,14 +370,15 @@
 
 		/*播放器*/
 		var Player = (function() {
-
-			var isPlaying = false;
-			var $btn_play = $('#btn_play').click(function() {
+			var isPauseClick = false;
+			var $btn_play = $('#btn_play').on('click', function() {
 				var $this = $(this);
 				if ($this.hasClass('pause')) {
+					isPauseClick = true;
 					pause();
 					$this.removeClass('pause');
 				} else {
+					isPauseClick = false;
 					play();
 					$this.addClass('pause');
 				}
@@ -388,6 +389,9 @@
 			var newLayer, oldLayer;
 			var playTT;
 			var play = function() {
+				if (isPauseClick) {
+					return;
+				}
 				isPlaying = true;
 				oldLayer = randar_layers[currentIndex];
 				oldLayer.setOpacity(0);
@@ -599,6 +603,20 @@
 			}
 		}
 
+		var _getJson = function() {
+			var cache = {};
+			return function(url, cb) {
+				var v = cache[url];
+				if (v) {
+					cb && cb(v);
+				} else {
+					$.getJSON(url, function(data) {
+						cache[url] = data;
+						cb && cb(data);
+					});
+				}
+			}
+		}();
 		/*根据经纬度得到地名*/
 		var lnglatToAddress = function(lon, lat, callback) {
 			var geocoder = new AMap.Geocoder({
@@ -874,13 +892,74 @@
 				url += (url.indexOf('?') > -1 ? "&" : "?") + "lnglat=" + lnglat;
 			}
 
-			function _playImgs(imgs) {
+			function _playImgs(imgs, auto_play) {
 				renderImgLayer(imgs);
-				var auto_play = !!getParam('auto_play', false);
+				var auto_play = !!getParam('auto_play', false) || auto_play;
 				if (auto_play) {
 					Player.reset();
 					Player.play();
 				}
+			}
+			if (type == 'radar') {
+				var arrLngLat = lnglat.split(',');
+				var pCurrent = new AMap.LngLat(parseFloat(arrLngLat[0]), parseFloat(arrLngLat[1]));
+				var $map = $('#map');
+				var maxSize = Math.pow(Math.max($map.width(), $map.height()) / 4, 2);
+				var urlChina = imgLayerConf[type]['url2'];
+				AMap.event.addListener(mapObj, 'zoomend', function(e) {
+					_show();
+				});
+				AMap.event.addListener(mapObj, 'moveend', function(e) {
+					_show();
+				});
+				function _parseData(data) {
+					var imgs = data.radar_img;
+					if (imgs) {
+						var imgs_new = [];
+						$.each(imgs, function(i, d) {
+							imgs_new.push({
+								l1: new Date(d[1]*1000),
+								l2: d[0],
+								pos: d[2]
+							});
+						});
+						_playImgs(imgs_new, true);
+					}
+				}
+				var stat = 0;
+				function _showChina() {
+					stat = 1;
+					_getJson(urlChina, _parseData);
+					console.log('_showChina');
+				}
+				function _showSingle() {
+					stat = 2;
+					_getJson(url, _parseData);
+					console.log('_showSingle');
+				}
+				
+				var isLock = false;
+				var ttLock;
+				function _show() {
+					if (type != 'radar') {
+						return;
+					}
+					if (isLock) {
+						return;
+					}
+					isLock = true;
+					clearTimeout(ttLock);
+					ttLock = setTimeout(function() {
+						isLock = false;
+					}, 1000);
+					if (mapObj.getZoom() <= 5 || !mapObj.getBounds().contains(pCurrent)) {
+						(stat == 0 || stat == 2) && _showChina();
+					} else {
+						(stat == 0 || stat == 1) && _showSingle();
+					}
+				}
+				_show();
+				return;
 			}
 			$.getJSON(url, function(data) {
 				if (type == 'radar') {
