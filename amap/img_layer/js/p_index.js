@@ -424,7 +424,7 @@
 
 
 		/*初始化地图*/
-		var mapObj;
+		// var mapObj;
 
 		function mapInit() {
 			var initLngLat = new AMap.LngLat(initLon, initLat);
@@ -443,14 +443,15 @@
 			mapObj = new AMap.Map("map", {
 				scrollWheel: false, //可通过鼠标滚轮缩放地图
 				doubleClickZoom: true, //可以双击鼠标放大地图
+				zooms: [3, 12], //限制范围
 				//修改地图默认图层为卫星图
 				// layers:[new AMap.TileLayer.Satellite()],
 				view: new AMap.View2D({
-						center: initLngLat,
-						zoom: parseInt(getParam('zoom')) || 6,
-						// touchZoom: true,
-						crs: 'EPSG3857'
-					}) //2D地图显示视口  
+					center: initLngLat,
+					zoom: parseInt(getParam('zoom')) || 6,
+					// touchZoom: true,
+					crs: 'EPSG3857'
+				}) //2D地图显示视口  
 			});
 
 			// mapObj = new AMap.Map('map',{resizeEnable: true, center: initLngLat, level: 5, touchZoom: true});
@@ -557,25 +558,26 @@
 			//为地图注册click事件获取鼠标点击出的经纬度坐标
 			var clickEventListener = AMap.event.addListener(mapObj, isSupportTouch ? 'touchstart' : 'mousedown', function(e) {
 				oldPixel = e.pixel;
+				clearTimeout(mousedownTT);
 				mousedownTT = setTimeout(function() {
 					if (isSupportTouch) {
 						// alert(e.touches)
 					}
 					initLon = e.lnglat.getLng(),
-						initLat = e.lnglat.getLat();
+					initLat = e.lnglat.getLat();
 					// setCenter(lon,lat);
 					var lngLat = new AMap.LngLat(initLon, initLat);
 					// setMarker(lngLat);
 					refresh(initLon, initLat);
-				}, 600);
+				}, 1000);
 			});
-			var MIN_DIS = 30;
+			var MIN_DIS = Math.pow(40, 2);
 			AMap.event.addListener(mapObj, isSupportTouch ? 'touchmove' : 'mousemove', function(e) {
 				if (oldPixel) {
 					var newPixed = e.pixel;
 					var x = Math.abs(newPixed.x - oldPixel.x);
 					var y = Math.abs(newPixed.y - oldPixel.y);
-					if (x > MIN_DIS || y > MIN_DIS) {
+					if (Math.pow(x, 2) + Math.pow(y, 2) > MIN_DIS) {
 						clearTimeout(mousedownTT);
 					}
 				}
@@ -626,7 +628,7 @@
 						var data = {
 							lng: locate.lng,
 							lat: locate.lat,
-							address: pois.address
+							address: (pois.name + '') + (pois.address + '')
 						};
 						return callback && callback(data);
 					} catch (e) {
@@ -746,7 +748,7 @@
 		var ajax_data;
 		var refreshTT;
 		var title = document.title || '天气管家';
-		var showOpacity = 0.6;
+		var showOpacity = 1;
 		var imgLayerConf = {
 			'cloud': {
 				name: '云图',
@@ -755,7 +757,8 @@
 			},
 			'radar': {
 				name: '雷达图',
-				url: prefix_req + 'imgs.php?type=radar',
+				url: prefix_req + 'imgs.php?type=radar2',
+				url2: prefix_req + 'imgs.php?type=radar',
 				isShowJS: true
 			},
 			'precipitation': {
@@ -863,10 +866,22 @@
 			Player.reset();
 			// Player.play();
 			var url = imgLayerConf[type]['url'];
-			if (lnglat && !is_show_all_img) {
+			// if (type == 'radar' && mapObj.getZoom() <= 5) {
+			// 	url = imgLayerConf[type]['url2'];
+			// }
+			// if (lnglat && !is_show_all_img) {
+			if (lnglat) {
 				url += (url.indexOf('?') > -1 ? "&" : "?") + "lnglat=" + lnglat;
 			}
 
+			function _playImgs(imgs) {
+				renderImgLayer(imgs);
+				var auto_play = !!getParam('auto_play', false);
+				if (auto_play) {
+					Player.reset();
+					Player.play();
+				}
+			}
 			$.getJSON(url, function(data) {
 				if (type == 'radar') {
 					var imgs = data.radar_img;
@@ -880,16 +895,28 @@
 							});
 						});
 						imgs = imgs_new;
+					} else {
+						$.getJSON(imgLayerConf[type]['url2'], function(data) {
+							var imgs = data.radar_img;
+							if (imgs) {
+								var imgs_new = [];
+								$.each(imgs, function(i, d) {
+									imgs_new.push({
+										l1: new Date(d[1]*1000),
+										l2: d[0],
+										pos: d[2]
+									});
+								});
+								imgs = imgs_new;
+								_playImgs(imgs);
+							}
+						});
+						return;
 					}
 				} else {
 					var imgs = data.l.reverse();
 				}
-				renderImgLayer(imgs);
-				var auto_play = !!getParam('auto_play', false);
-				if (auto_play) {
-					Player.reset();
-					Player.play();
-				}
+				_playImgs(imgs);
 			});
 		}
 		var $tool_bar = $('.tool_bar').click(function(e) {
