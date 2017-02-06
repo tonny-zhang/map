@@ -355,9 +355,9 @@
 				}
 			}
 
-			requestAnimFrame(function() {
-				draw_canvas(c, startTime);
-			});
+			// requestAnimFrame(function() {
+			// 	draw_canvas(c, startTime);
+			// });
 		}
 
 		function drawSector(callback) {
@@ -438,7 +438,7 @@
 				mousewheelTT = setTimeout(function() {
 					clearTimeout(mousewheelTT);
 					if (e.deltaY == 1) {
-						mapObj.zoomIn();
+						mapObj.edIn();
 					} else if (e.deltaY == -1) {
 						mapObj.zoomOut();
 					}
@@ -952,7 +952,7 @@
 					ttLock = setTimeout(function() {
 						isLock = false;
 					}, 1000);
-					if (mapObj.getZoom() <= 5 || !mapObj.getBounds().contains(pCurrent)) {
+					if (mapObj.getZoom() <= 7 || !mapObj.getBounds().contains(pCurrent)) {
 						(stat == 0 || stat == 2) && _showChina();
 					} else {
 						(stat == 0 || stat == 1) && _showSingle();
@@ -1109,12 +1109,13 @@
 					// }
 					var result = data.result;
 					if (!result) {
+						$desc.text('分钟级降水数据加载错误！');
 						return;
 					}
 					data = result.minutely;
 					radar_desc = data.description;
 					$desc.text(radar_desc);
-					rainfall_data = data.precipitation.slice(0, 60);
+					rainfall_data = data.precipitation_2h.slice(0, 120);
 					var t = result.hourly.temperature[0].value < -2 ? '雪' : '雨';
 					$('.level_c .leve_1 .type_flag').text(t);
 					init_canvas_size();
